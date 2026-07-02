@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gym-tracker-v1';
+const CACHE_NAME = 'gym-tracker-v2';
 const LOCAL_ASSETS = [
   './',
   './index.html',
@@ -6,16 +6,10 @@ const LOCAL_ASSETS = [
   './icon-192.png',
   './icon-512.png',
 ];
-const CDN_ASSETS = [
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js',
-];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(async (cache) => {
-      await cache.addAll(LOCAL_ASSETS);
-      await Promise.all(CDN_ASSETS.map((url) => cache.add(url).catch(() => {})));
-    }).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(LOCAL_ASSETS)).then(() => self.skipWaiting())
   );
 });
 

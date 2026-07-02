@@ -11,7 +11,6 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root {
     --bg: #13151A;
@@ -221,67 +220,6 @@
     font-size: 11px; font-weight: 700; color: var(--gold);
   }
 
-  /* ---------- Progress / SECA view ---------- */
-  .card {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-  .card h2 { font-size: 14px; color: var(--gold); margin-bottom: 12px; font-weight: 700; }
-  .form-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  }
-  .form-field { display: flex; flex-direction: column; gap: 4px; }
-  .form-field label { font-size: 11.5px; color: var(--text-dim); }
-  .form-field input, .form-field select {
-    background: var(--bg-elev-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-  }
-  .form-field input:focus, .form-field select:focus { outline: none; border-color: var(--gold); }
-  .add-measurement-btn {
-    grid-column: 1 / -1;
-    padding: 13px;
-    border-radius: 10px;
-    border: none;
-    background: var(--green);
-    color: #fff;
-    font-weight: 700;
-    font-size: 14px;
-    margin-top: 4px;
-  }
-
-  .metric-select {
-    width: 100%;
-    margin-bottom: 12px;
-    background: var(--bg-elev-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
-  }
-  .chart-wrap { position: relative; height: 220px; }
-  .empty-state { color: var(--text-dim); font-size: 13px; text-align: center; padding: 20px 0; }
-
-  .history-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-  }
-  .history-row:last-child { border-bottom: none; }
-  .history-date { color: var(--gold); font-weight: 700; min-width: 62px; }
-  .history-vals { flex: 1; color: var(--text-dim); padding: 0 8px; }
-  .history-del {
-    background: none; border: none; color: var(--danger); font-size: 16px; padding: 4px 6px;
-  }
-
   /* ---------- Bottom nav ---------- */
   nav.tabbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -301,6 +239,7 @@
   }
   nav.tabbar button .icon { font-size: 19px; }
   nav.tabbar button.active { color: var(--gold); }
+  nav.tabbar button.download-btn { color: var(--green); }
 
   /* ---------- Rest timer overlay ---------- */
   .timer-overlay {
@@ -371,53 +310,6 @@
   <div id="week-list"></div>
 </section>
 
-<!-- ================= VISTA: PROGRESO SECA mBCA ================= -->
-<section class="view" id="view-progress">
-  <div class="card">
-    <h2>Nueva medición</h2>
-    <div class="form-grid">
-      <div class="form-field">
-        <label for="m-fecha">Fecha</label>
-        <input type="date" id="m-fecha">
-      </div>
-      <div class="form-field">
-        <label for="m-peso">Peso (kg)</label>
-        <input type="number" step="0.1" id="m-peso" placeholder="0.0">
-      </div>
-      <div class="form-field">
-        <label for="m-grasa">Grasa (kg)</label>
-        <input type="number" step="0.1" id="m-grasa" placeholder="0.0">
-      </div>
-      <div class="form-field">
-        <label for="m-smm">SMM (kg)</label>
-        <input type="number" step="0.1" id="m-smm" placeholder="0.0">
-      </div>
-      <div class="form-field">
-        <label for="m-angulo">Ángulo de fase</label>
-        <input type="number" step="0.1" id="m-angulo" placeholder="0.0">
-      </div>
-      <button class="add-measurement-btn" id="add-measurement-btn">Agregar medición</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Tendencia</h2>
-    <select class="metric-select" id="metric-select">
-      <option value="peso">Peso (kg)</option>
-      <option value="grasa">Grasa (kg)</option>
-      <option value="smm">SMM (kg)</option>
-      <option value="angulo">Ángulo de fase</option>
-    </select>
-    <div class="chart-wrap"><canvas id="trend-chart"></canvas></div>
-    <div class="empty-state" id="chart-empty" style="display:none;">Agrega al menos 2 mediciones para ver la tendencia.</div>
-  </div>
-
-  <div class="card">
-    <h2>Historial</h2>
-    <div id="history-list"></div>
-    <div class="empty-state" id="history-empty" style="display:none;">Aún no hay mediciones registradas.</div>
-  </div>
-</section>
 
 <!-- ================= REST TIMER OVERLAY ================= -->
 <div class="timer-overlay" id="timer-overlay">
@@ -440,7 +332,7 @@
 <nav class="tabbar">
   <button class="tab-btn active" data-view="view-day"><span class="icon">🏋️</span>Rutina</button>
   <button class="tab-btn" data-view="view-week"><span class="icon">📅</span>Semana</button>
-  <button class="tab-btn" data-view="view-progress"><span class="icon">📈</span>Progreso</button>
+  <button class="download-btn" id="download-progress-btn"><span class="icon">⬇️</span>Descargar progreso</button>
 </nav>
 
 <script>
@@ -522,7 +414,6 @@ const DAY_LABELS = { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', 
    ====================================================================== */
 const LS_PROGRESS = 'gym_progress';       // { "YYYY-MM-DD": { dayKey: { exIndex: { sets: [{kg,reps,done}] } } } }
 const LS_CURRENT_DAY = 'gym_current_day'; // "lunes" | "martes" | ...
-const LS_MEASUREMENTS = 'gym_measurements'; // [{ fecha, peso, grasa, smm, angulo }]
 
 function loadJSON(key, fallback) {
   try {
@@ -537,7 +428,6 @@ function saveJSON(key, value) {
 }
 
 let progressData = loadJSON(LS_PROGRESS, {});
-let measurements = loadJSON(LS_MEASUREMENTS, []);
 
 /* ======================================================================
    UTILIDADES DE FECHA
@@ -877,127 +767,52 @@ function renderWeekView() {
 }
 
 /* ======================================================================
-   VISTA: PROGRESO SECA mBCA
+   DESCARGAR PROGRESO (CSV)
+   Exporta todas las series marcadas como completadas, de todo el
+   historial guardado en gym_progress, una fila por serie.
    ====================================================================== */
-const metricSelect = document.getElementById('metric-select');
-const METRIC_FIELDS = { peso: 'peso', grasa: 'grasa', smm: 'smm', angulo: 'angulo' };
-const METRIC_LABELS = { peso: 'Peso (kg)', grasa: 'Grasa (kg)', smm: 'SMM (kg)', angulo: 'Ángulo de fase' };
-
-document.getElementById('m-fecha').value = todayISO();
-
-document.getElementById('add-measurement-btn').addEventListener('click', () => {
-  const fecha = document.getElementById('m-fecha').value || todayISO();
-  const peso = document.getElementById('m-peso').value;
-  const grasa = document.getElementById('m-grasa').value;
-  const smm = document.getElementById('m-smm').value;
-  const angulo = document.getElementById('m-angulo').value;
-
-  if (!peso && !grasa && !smm && !angulo) {
-    showToast('Agrega al menos un valor');
-    return;
-  }
-
-  measurements = measurements.filter((m) => m.fecha !== fecha);
-  measurements.push({ fecha, peso, grasa, smm, angulo });
-  measurements.sort((a, b) => a.fecha.localeCompare(b.fecha));
-  saveJSON(LS_MEASUREMENTS, measurements);
-
-  document.getElementById('m-peso').value = '';
-  document.getElementById('m-grasa').value = '';
-  document.getElementById('m-smm').value = '';
-  document.getElementById('m-angulo').value = '';
-
-  showToast('Medición agregada');
-  renderProgressView();
-});
-
-metricSelect.addEventListener('change', renderChart);
-
-let trendChart = null;
-function renderChart() {
-  const canvas = document.getElementById('trend-chart');
-  const emptyEl = document.getElementById('chart-empty');
-  const metric = metricSelect.value;
-  const points = measurements.filter((m) => m[METRIC_FIELDS[metric]] !== '' && m[METRIC_FIELDS[metric]] != null);
-
-  if (points.length < 2 || typeof Chart === 'undefined') {
-    canvas.style.display = 'none';
-    emptyEl.style.display = 'block';
-    if (trendChart) { trendChart.destroy(); trendChart = null; }
-    return;
-  }
-  canvas.style.display = 'block';
-  emptyEl.style.display = 'none';
-
-  const labels = points.map((m) => ddmmFromISO(m.fecha));
-  const data = points.map((m) => parseFloat(m[METRIC_FIELDS[metric]]));
-
-  if (trendChart) trendChart.destroy();
-  trendChart = new Chart(canvas.getContext('2d'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: METRIC_LABELS[metric],
-        data,
-        borderColor: '#C9A227',
-        backgroundColor: 'rgba(201,162,39,0.12)',
-        tension: 0.3,
-        fill: true,
-        pointBackgroundColor: '#3A6B5C',
-        pointRadius: 4,
-      }],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#9AA0AC' }, grid: { color: '#2A2D36' } },
-        y: { ticks: { color: '#9AA0AC' }, grid: { color: '#2A2D36' } },
-      },
-    },
-  });
+function csvField(value) {
+  const str = String(value ?? '');
+  return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
-function renderHistory() {
-  const listEl = document.getElementById('history-list');
-  const emptyEl = document.getElementById('history-empty');
-  listEl.innerHTML = '';
-
-  if (!measurements.length) {
-    emptyEl.style.display = 'block';
-    return;
-  }
-  emptyEl.style.display = 'none';
-
-  [...measurements].reverse().forEach((m) => {
-    const row = document.createElement('div');
-    row.className = 'history-row';
-    const vals = [
-      m.peso ? `${m.peso}kg` : null,
-      m.grasa ? `grasa ${m.grasa}kg` : null,
-      m.smm ? `SMM ${m.smm}kg` : null,
-      m.angulo ? `∠ ${m.angulo}°` : null,
-    ].filter(Boolean).join(' · ');
-    row.innerHTML = `
-      <div class="history-date">${ddmmFromISO(m.fecha)}</div>
-      <div class="history-vals">${vals || '—'}</div>
-      <button class="history-del">✕</button>
-    `;
-    row.querySelector('.history-del').addEventListener('click', () => {
-      measurements = measurements.filter((x) => x.fecha !== m.fecha);
-      saveJSON(LS_MEASUREMENTS, measurements);
-      renderProgressView();
+function buildProgressCSV() {
+  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps']];
+  Object.keys(progressData).sort().forEach((dateISO) => {
+    ROUTINE.order.forEach((dayKey) => {
+      const dayEntry = progressData[dateISO][dayKey];
+      const dia = ROUTINE.dias[dayKey];
+      if (!dayEntry || !dia) return;
+      Object.keys(dayEntry).forEach((exIndexStr) => {
+        const ex = dia.ejercicios[Number(exIndexStr)];
+        const sets = dayEntry[exIndexStr].sets || [];
+        if (!ex) return;
+        sets.forEach((set, i) => {
+          if (!set.done) return;
+          rows.push([dateISO, DAY_LABELS[dayKey], ex.nombre, i + 1, set.kg || '', set.reps || '']);
+        });
+      });
     });
-    listEl.appendChild(row);
   });
+  return rows.map((r) => r.map(csvField).join(',')).join('\r\n');
 }
 
-function renderProgressView() {
-  renderChart();
-  renderHistory();
-}
+document.getElementById('download-progress-btn').addEventListener('click', () => {
+  const csv = buildProgressCSV();
+  if (csv.split('\r\n').length <= 1) {
+    showToast('Aún no hay series completadas');
+    return;
+  }
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gym-progreso-${todayISO()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
 
 /* ======================================================================
    NAVEGACIÓN POR TABS
@@ -1009,7 +824,6 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
     btn.classList.add('active');
     document.getElementById(btn.dataset.view).classList.add('active');
     if (btn.dataset.view === 'view-week') renderWeekView();
-    if (btn.dataset.view === 'view-progress') renderProgressView();
     if (btn.dataset.view === 'view-day') renderDayView();
   });
 });
