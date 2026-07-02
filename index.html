@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#13151A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Gym Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #13151A;
+    --bg-elev: #1B1E26;
+    --bg-elev-2: #21242E;
+    --gold: #C9A227;
+    --gold-dim: #8C7020;
+    --green: #3A6B5C;
+    --text: #ECECEC;
+    --text-dim: #9AA0AC;
+    --border: #2A2D36;
+    --danger: #B4453D;
+    --ok: #4C8C6E;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+    min-height: 100vh;
+  }
+  h1, h2, h3, p { margin: 0; }
+  button { font-family: inherit; }
+
+  /* ---------- Header ---------- */
+  header.app-header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    padding: calc(14px + env(safe-area-inset-top)) 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  header.app-header h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--gold);
+  }
+  header.app-header .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  /* ---------- Views ---------- */
+  .view { display: none; padding: 16px; max-width: 640px; margin: 0 auto; }
+  .view.active { display: block; }
+
+  /* ---------- Day selector chips ---------- */
+  .day-chips {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .day-chip {
+    flex: 0 0 auto;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .day-chip.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #13151A;
+  }
+
+  /* ---------- Progress bar ---------- */
+  .progress-wrap {
+    margin-bottom: 18px;
+  }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--text-dim); margin-bottom: 6px;
+  }
+  .progress-track {
+    height: 8px; border-radius: 4px; background: var(--bg-elev-2); overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--green), var(--gold));
+    border-radius: 4px; transition: width 0.3s ease;
+  }
+
+  /* ---------- Exercise card ---------- */
+  .exercise-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .exercise-title {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    margin-bottom: 2px;
+  }
+  .exercise-meta {
+    font-size: 12px; color: var(--gold); font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .exercise-note {
+    font-size: 12px; color: var(--text-dim);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    background: var(--bg-elev-2);
+    border-left: 3px solid var(--green);
+    border-radius: 6px;
+  }
+  .exercise-last {
+    font-size: 11.5px; color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .exercise-last strong { color: var(--gold); font-weight: 600; }
+
+  .set-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1fr 40px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .set-num {
+    font-size: 12px; color: var(--text-dim); text-align: center;
+  }
+  .set-row input {
+    width: 100%;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 9px 8px;
+    font-size: 14px;
+    text-align: center;
+  }
+  .set-row input:focus { outline: none; border-color: var(--gold); }
+  .set-row input::placeholder { color: #565A66; }
+
+  .check-btn {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev-2);
+    color: var(--text-dim);
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .check-btn.done {
+    background: var(--ok);
+    border-color: var(--ok);
+    color: #fff;
+  }
+
+  .save-day-btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    background: var(--gold);
+    color: #13151A;
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  .save-day-btn:active { opacity: 0.85; }
+
+  .toast {
+    position: fixed;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    left: 50%; transform: translateX(-50%);
+    background: var(--ok);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+
+  /* ---------- Week view ---------- */
+  .week-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .week-card .info { flex: 1; }
+  .week-card .day-name { font-size: 15px; font-weight: 700; }
+  .week-card .day-focus { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .week-ring { position: relative; width: 46px; height: 46px; flex: 0 0 auto; }
+  .week-ring svg { transform: rotate(-90deg); }
+  .week-ring .pct {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--gold);
+  }
+
+  /* ---------- Progress / SECA view ---------- */
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 14px; color: var(--gold); margin-bottom: 12px; font-weight: 700; }
+  .form-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field label { font-size: 11.5px; color: var(--text-dim); }
+  .form-field input, .form-field select {
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  .form-field input:focus, .form-field select:focus { outline: none; border-color: var(--gold); }
+  .add-measurement-btn {
+    grid-column: 1 / -1;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .metric-select {
+    width: 100%;
+    margin-bottom: 12px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  .chart-wrap { position: relative; height: 220px; }
+  .empty-state { color: var(--text-dim); font-size: 13px; text-align: center; padding: 20px 0; }
+
+  .history-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-date { color: var(--gold); font-weight: 700; min-width: 62px; }
+  .history-vals { flex: 1; color: var(--text-dim); padding: 0 8px; }
+  .history-del {
+    background: none; border: none; color: var(--danger); font-size: 16px; padding: 4px 6px;
+  }
+
+  /* ---------- Bottom nav ---------- */
+  nav.tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    display: flex;
+    background: var(--bg-elev);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  nav.tabbar button {
+    flex: 1;
+    background: none; border: none;
+    color: var(--text-dim);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 10px 0 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  nav.tabbar button .icon { font-size: 19px; }
+  nav.tabbar button.active { color: var(--gold); }
+
+  /* ---------- Rest timer overlay ---------- */
+  .timer-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(10, 11, 14, 0.94);
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column;
+    gap: 22px;
+    padding: 24px;
+  }
+  .timer-overlay.show { display: flex; }
+  .timer-overlay .ex-name {
+    color: var(--text-dim); font-size: 13px; text-align: center;
+  }
+  .timer-ring-wrap { position: relative; width: 220px; height: 220px; }
+  .timer-ring-wrap svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .timer-ring-wrap .time-text {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; font-weight: 700; color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-label { color: var(--text-dim); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+  .timer-actions { display: flex; gap: 12px; }
+  .timer-actions button {
+    padding: 12px 22px;
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .timer-actions button.primary {
+    background: var(--gold); border-color: var(--gold); color: #13151A;
+  }
+
+  ::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1 id="header-title">Gym Tracker</h1>
+  <div class="subtitle" id="header-subtitle">Bloque 4</div>
+</header>
+
+<!-- ================= VISTA: RUTINA DEL DÍA ================= -->
+<section class="view active" id="view-day">
+  <div class="day-chips" id="day-chips"></div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span id="progress-text">0 / 0 series</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div id="exercise-list"></div>
+
+  <button class="save-day-btn" id="save-day-btn">Guardar día</button>
+</section>
+
+<!-- ================= VISTA: SEMANA ================= -->
+<section class="view" id="view-week">
+  <div id="week-list"></div>
+</section>
+
+<!-- ================= VISTA: PROGRESO SECA mBCA ================= -->
+<section class="view" id="view-progress">
+  <div class="card">
+    <h2>Nueva medición</h2>
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="m-fecha">Fecha</label>
+        <input type="date" id="m-fecha">
+      </div>
+      <div class="form-field">
+        <label for="m-peso">Peso (kg)</label>
+        <input type="number" step="0.1" id="m-peso" placeholder="0.0">
+      </div>
+      <div class="form-field">
+        <label for="m-grasa">Grasa (kg)</label>
+        <input type="number" step="0.1" id="m-grasa" placeholder="0.0">
+      </div>
+      <div class="form-field">
+        <label for="m-smm">SMM (kg)</label>
+        <input type="number" step="0.1" id="m-smm" placeholder="0.0">
+      </div>
+      <div class="form-field">
+        <label for="m-angulo">Ángulo de fase</label>
+        <input type="number" step="0.1" id="m-angulo" placeholder="0.0">
+      </div>
+      <button class="add-measurement-btn" id="add-measurement-btn">Agregar medición</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tendencia</h2>
+    <select class="metric-select" id="metric-select">
+      <option value="peso">Peso (kg)</option>
+      <option value="grasa">Grasa (kg)</option>
+      <option value="smm">SMM (kg)</option>
+      <option value="angulo">Ángulo de fase</option>
+    </select>
+    <div class="chart-wrap"><canvas id="trend-chart"></canvas></div>
+    <div class="empty-state" id="chart-empty" style="display:none;">Agrega al menos 2 mediciones para ver la tendencia.</div>
+  </div>
+
+  <div class="card">
+    <h2>Historial</h2>
+    <div id="history-list"></div>
+    <div class="empty-state" id="history-empty" style="display:none;">Aún no hay mediciones registradas.</div>
+  </div>
+</section>
+
+<!-- ================= REST TIMER OVERLAY ================= -->
+<div class="timer-overlay" id="timer-overlay">
+  <div class="ex-name" id="timer-ex-name"></div>
+  <div class="timer-ring-wrap">
+    <svg viewBox="0 0 220 220">
+      <circle cx="110" cy="110" r="98" stroke="#2A2D36" stroke-width="10" fill="none"></circle>
+      <circle cx="110" cy="110" r="98" stroke="#C9A227" stroke-width="10" fill="none"
+        stroke-linecap="round" id="timer-ring" stroke-dasharray="615.75" stroke-dashoffset="0"></circle>
+    </svg>
+    <div class="time-text" id="timer-time">00:00</div>
+  </div>
+  <div class="timer-label">Descanso</div>
+  <div class="timer-actions">
+    <button id="timer-skip">Saltar</button>
+    <button class="primary" id="timer-add">+15s</button>
+  </div>
+</div>
+
+<nav class="tabbar">
+  <button class="tab-btn active" data-view="view-day"><span class="icon">🏋️</span>Rutina</button>
+  <button class="tab-btn" data-view="view-week"><span class="icon">📅</span>Semana</button>
+  <button class="tab-btn" data-view="view-progress"><span class="icon">📈</span>Progreso</button>
+</nav>
+
+<script>
+/* ======================================================================
+   ZONA DE RUTINA — EDITAR AQUÍ
+   Para cambiar de bloque de rutina, reemplaza por completo el objeto
+   ROUTINE de abajo (respetando la misma forma) y no toques nada más
+   en el archivo.
+
+   Forma de cada ejercicio:
+   { nombre, sets: <num. de series>, repsLabel: <texto a mostrar, ej "6-8" o "10/pierna">,
+     restSec: <segundos de descanso entre series>, nota: <texto técnico> }
+   ====================================================================== */
+const ROUTINE = {
+  order: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'],
+  dias: {
+    lunes: {
+      nombre: 'Fuerza Lower Body',
+      ejercicios: [
+        { nombre: 'Hip thrust en banco con mancuerna', sets: 5, repsLabel: '6-8', restSec: 120, nota: 'Aprieta glúteo 1 seg arriba. Barbilla al pecho, no hiperextiendas la lumbar.' },
+        { nombre: 'Zancadas con mancuernas caminando', sets: 4, repsLabel: '10/pierna', restSec: 120, nota: 'Paso amplio y controlado. Rodilla trasera casi toca el suelo.' },
+        { nombre: 'RDL unilateral con mancuerna', sets: 4, repsLabel: '8/pierna', restSec: 90, nota: 'Bisagra de cadera, espalda neutra.' },
+        { nombre: 'Curl femoral de pie unilateral en cable', sets: 3, repsLabel: '12/pierna', restSec: 75, nota: 'Tensión constante, baja lento.' },
+        { nombre: 'Extensión de cuádriceps unilateral', sets: 3, repsLabel: '15/pierna', restSec: 60, nota: 'Squeeze 2 seg arriba.' },
+      ],
+    },
+    martes: {
+      nombre: 'Fuerza Upper Body',
+      ejercicios: [
+        { nombre: 'Press en banco declinado con mancuernas', sets: 5, repsLabel: '5-6', restSec: 150, nota: 'Carga máxima, rango completo.' },
+        { nombre: 'Remo en T-bar', sets: 5, repsLabel: '5-6', restSec: 150, nota: 'Torso 45°, codos pegados, sin impulso.' },
+        { nombre: 'Press militar con mancuernas de pie', sets: 4, repsLabel: '6-8', restSec: 120, nota: 'Core apretado, no arquees la lumbar.' },
+        { nombre: 'Jalón al pecho agarre neutro cerrado', sets: 4, repsLabel: '8-10', restSec: 90, nota: 'Codos hacia abajo, squeeze 1 seg.' },
+        { nombre: 'Face pull con cuerda', sets: 3, repsLabel: '15', restSec: 60, nota: 'Codos altos, squeeze en escápulas.' },
+      ],
+    },
+    miercoles: {
+      nombre: 'Hipertrofia Upper Body',
+      ejercicios: [
+        { nombre: 'Cable crossover desde polea alta', sets: 4, repsLabel: '12-15', restSec: 60, nota: 'Squeeze 2 seg al cruzar.' },
+        { nombre: 'Cable crossover desde polea baja', sets: 4, repsLabel: '12-15', restSec: 60, nota: 'Squeeze 2 seg arriba.' },
+        { nombre: 'Remo con cable unilateral en polea baja', sets: 4, repsLabel: '12/brazo', restSec: 75, nota: 'Sin rotar torso, squeeze 1 seg.' },
+        { nombre: 'Elevaciones laterales con cable unilateral', sets: 4, repsLabel: '15/brazo', restSec: 60, nota: 'Sin balanceo.' },
+        { nombre: 'Curl araña en banco inclinado', sets: 4, repsLabel: '10-12', restSec: 75, nota: 'Sin impulso posible.' },
+        { nombre: 'Press francés con mancuernas', sets: 4, repsLabel: '10-12', restSec: 75, nota: 'Codos fijos apuntando al techo.' },
+      ],
+    },
+    jueves: {
+      nombre: 'Potencia + Core',
+      ejercicios: [
+        { nombre: 'Sentadilla hack en máquina', sets: 4, repsLabel: '8', restSec: 90, nota: 'Explosivo en subida, bajada 3 seg.' },
+        { nombre: 'Press en polea baja de pie cruzado', sets: 4, repsLabel: '12/lado', restSec: 75, nota: 'Core estabiliza, no rotar.' },
+        { nombre: 'Curl de bíceps en polea baja con cuerda', sets: 3, repsLabel: '15', restSec: 60, nota: 'Codos pegados, sin balanceo.' },
+        { nombre: 'Extensión de tríceps sobre cabeza con cuerda', sets: 3, repsLabel: '15', restSec: 60, nota: 'Codos fijos junto a la cabeza.' },
+        { nombre: 'Rueda abdominal', sets: 4, repsLabel: '10-12', restSec: 75, nota: 'Rango máximo sin perder posición lumbar.' },
+        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 60, nota: 'Antirotación, 1 seg extendido.' },
+        { nombre: 'Dead bug', sets: 3, repsLabel: '12/lado', restSec: 60, nota: 'Lento, lumbar pegada al suelo.' },
+      ],
+    },
+    viernes: {
+      nombre: 'Metabólico Full Body',
+      ejercicios: [
+        { nombre: 'Press en máquina convergente', sets: 3, repsLabel: '15', restSec: 45, nota: 'Tempo 2-1-2.' },
+        { nombre: 'Remo en polea alta agarre supino', sets: 3, repsLabel: '15', restSec: 45, nota: 'Squeeze 1 seg.' },
+        { nombre: 'Zancada estática con mancuernas', sets: 3, repsLabel: '12/pierna', restSec: 45, nota: 'Sin rebote en rodilla trasera.' },
+        { nombre: 'Elevaciones laterales en cable', sets: 3, repsLabel: '15/brazo', restSec: 45, nota: 'Sin descanso entre lados.' },
+        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 45, nota: 'Control total.' },
+        { nombre: 'Caminata inclinada', sets: 1, repsLabel: '15 min', restSec: 0, nota: 'Zona 2, ritmo conversacional.' },
+      ],
+    },
+  },
+};
+const DAY_LABELS = { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes' };
+/* ==================== FIN ZONA DE RUTINA ==================== */
+
+
+/* ======================================================================
+   ESTADO Y PERSISTENCIA (localStorage)
+   ====================================================================== */
+const LS_PROGRESS = 'gym_progress';       // { "YYYY-MM-DD": { dayKey: { exIndex: { sets: [{kg,reps,done}] } } } }
+const LS_CURRENT_DAY = 'gym_current_day'; // "lunes" | "martes" | ...
+const LS_MEASUREMENTS = 'gym_measurements'; // [{ fecha, peso, grasa, smm, angulo }]
+
+function loadJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+function saveJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+let progressData = loadJSON(LS_PROGRESS, {});
+let measurements = loadJSON(LS_MEASUREMENTS, []);
+
+/* ======================================================================
+   UTILIDADES DE FECHA
+   ====================================================================== */
+function todayISO() {
+  const d = new Date();
+  return isoFromDate(d);
+}
+function isoFromDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function ddmmFromISO(iso) {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}`;
+}
+function weekdayKeyForDate(d) {
+  const map = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+  return map[d.getDay()];
+}
+function mondayOfWeek(d) {
+  const date = new Date(d);
+  const day = date.getDay(); // 0=domingo
+  const diff = day === 0 ? -6 : 1 - day; // desplazamiento hasta el lunes
+  date.setDate(date.getDate() + diff);
+  return date;
+}
+
+/* ======================================================================
+   ESTADO DE NAVEGACIÓN
+   ====================================================================== */
+let currentDay = loadJSON(LS_CURRENT_DAY, null);
+if (!currentDay || !ROUTINE.dias[currentDay]) {
+  const wd = weekdayKeyForDate(new Date());
+  currentDay = ROUTINE.dias[wd] ? wd : 'lunes';
+}
+const currentLogDate = todayISO(); // toda edición del día se guarda bajo la fecha de hoy
+
+/* ======================================================================
+   ACCESO A PROGRESO DEL DÍA ACTUAL
+   ====================================================================== */
+function getDayEntry(dateISO, dayKey, create) {
+  if (!progressData[dateISO]) {
+    if (!create) return null;
+    progressData[dateISO] = {};
+  }
+  if (!progressData[dateISO][dayKey]) {
+    if (!create) return null;
+    progressData[dateISO][dayKey] = {};
+  }
+  return progressData[dateISO][dayKey];
+}
+function getSetState(dateISO, dayKey, exIndex, setIndex) {
+  const dayEntry = getDayEntry(dateISO, dayKey, false);
+  const ex = dayEntry && dayEntry[exIndex];
+  const set = ex && ex.sets && ex.sets[setIndex];
+  return set || { kg: '', reps: '', done: false };
+}
+function setSetState(dateISO, dayKey, exIndex, setIndex, patch) {
+  const dayEntry = getDayEntry(dateISO, dayKey, true);
+  if (!dayEntry[exIndex]) dayEntry[exIndex] = { sets: [] };
+  if (!dayEntry[exIndex].sets[setIndex]) dayEntry[exIndex].sets[setIndex] = { kg: '', reps: '', done: false };
+  Object.assign(dayEntry[exIndex].sets[setIndex], patch);
+  saveJSON(LS_PROGRESS, progressData);
+}
+
+function findLastTime(dayKey, exIndex, exName) {
+  const dates = Object.keys(progressData)
+    .filter((d) => d !== currentLogDate && d < currentLogDate)
+    .sort()
+    .reverse();
+  for (const d of dates) {
+    const entry = progressData[d] && progressData[d][dayKey] && progressData[d][dayKey][exIndex];
+    if (entry && entry.sets && entry.sets.some((s) => s.done)) {
+      const parts = entry.sets
+        .filter((s) => s.done)
+        .map((s) => (s.kg ? `${s.kg}kg×${s.reps || '?'}` : `${s.reps || '?'}`));
+      return { date: d, text: parts.join(' · ') };
+    }
+  }
+  return null;
+}
+
+/* ======================================================================
+   RENDER: VISTA RUTINA DEL DÍA
+   ====================================================================== */
+const dayChipsEl = document.getElementById('day-chips');
+const exerciseListEl = document.getElementById('exercise-list');
+const progressFillEl = document.getElementById('progress-fill');
+const progressTextEl = document.getElementById('progress-text');
+const progressPctEl = document.getElementById('progress-pct');
+
+function renderDayChips() {
+  dayChipsEl.innerHTML = '';
+  ROUTINE.order.forEach((dayKey) => {
+    const btn = document.createElement('button');
+    btn.className = 'day-chip' + (dayKey === currentDay ? ' active' : '');
+    btn.textContent = DAY_LABELS[dayKey];
+    btn.addEventListener('click', () => {
+      currentDay = dayKey;
+      saveJSON(LS_CURRENT_DAY, currentDay);
+      renderDayView();
+    });
+    dayChipsEl.appendChild(btn);
+  });
+}
+
+function computeDayProgress(dateISO, dayKey) {
+  const dia = ROUTINE.dias[dayKey];
+  let total = 0, done = 0;
+  dia.ejercicios.forEach((ex, exIndex) => {
+    for (let s = 0; s < ex.sets; s++) {
+      total++;
+      if (getSetState(dateISO, dayKey, exIndex, s).done) done++;
+    }
+  });
+  return { total, done };
+}
+
+function renderProgressBar() {
+  const { total, done } = computeDayProgress(currentLogDate, currentDay);
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  progressFillEl.style.width = pct + '%';
+  progressTextEl.textContent = `${done} / ${total} series`;
+  progressPctEl.textContent = pct + '%';
+}
+
+function renderExerciseList() {
+  exerciseListEl.innerHTML = '';
+  const dia = ROUTINE.dias[currentDay];
+  document.getElementById('header-subtitle').textContent = `${DAY_LABELS[currentDay]} · ${dia.nombre}`;
+
+  dia.ejercicios.forEach((ex, exIndex) => {
+    const card = document.createElement('div');
+    card.className = 'exercise-card';
+
+    const last = findLastTime(currentDay, exIndex, ex.nombre);
+
+    card.innerHTML = `
+      <div class="exercise-title">${ex.nombre}</div>
+      <div class="exercise-meta">${ex.sets}×${ex.repsLabel} · descanso ${ex.restSec >= 60 ? Math.round(ex.restSec/60)+'min' : ex.restSec+'s'}</div>
+      <div class="exercise-note">${ex.nota}</div>
+      <div class="exercise-last">${last ? `Última vez ${ddmmFromISO(last.date)}: <strong>${last.text}</strong>` : 'Sin registro previo'}</div>
+      <div class="sets-container"></div>
+    `;
+
+    const setsContainer = card.querySelector('.sets-container');
+    for (let s = 0; s < ex.sets; s++) {
+      const state = getSetState(currentLogDate, currentDay, exIndex, s);
+      const row = document.createElement('div');
+      row.className = 'set-row';
+      row.innerHTML = `
+        <div class="set-num">${s + 1}</div>
+        <input type="number" inputmode="decimal" placeholder="kg" value="${state.kg || ''}">
+        <input type="number" inputmode="numeric" placeholder="reps" value="${state.reps || ''}">
+        <button class="check-btn${state.done ? ' done' : ''}">${state.done ? '✓' : ''}</button>
+      `;
+      const [kgInput, repsInput] = row.querySelectorAll('input');
+      const checkBtn = row.querySelector('.check-btn');
+
+      kgInput.addEventListener('input', () => {
+        setSetState(currentLogDate, currentDay, exIndex, s, { kg: kgInput.value });
+      });
+      repsInput.addEventListener('input', () => {
+        setSetState(currentLogDate, currentDay, exIndex, s, { reps: repsInput.value });
+      });
+      checkBtn.addEventListener('click', () => {
+        const cur = getSetState(currentLogDate, currentDay, exIndex, s);
+        const willBeDone = !cur.done;
+        setSetState(currentLogDate, currentDay, exIndex, s, { done: willBeDone });
+        checkBtn.classList.toggle('done', willBeDone);
+        checkBtn.textContent = willBeDone ? '✓' : '';
+        renderProgressBar();
+        if (willBeDone && ex.restSec > 0) {
+          startRestTimer(ex.restSec, ex.nombre);
+        }
+      });
+
+      setsContainer.appendChild(row);
+    }
+
+    exerciseListEl.appendChild(card);
+  });
+}
+
+function renderDayView() {
+  renderDayChips();
+  renderExerciseList();
+  renderProgressBar();
+}
+
+document.getElementById('save-day-btn').addEventListener('click', () => {
+  saveJSON(LS_PROGRESS, progressData);
+  showToast('Día guardado');
+});
+
+function showToast(msg) {
+  const el = document.getElementById('toast') || createToastEl();
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), 1800);
+}
+function createToastEl() {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.id = 'toast';
+  document.body.appendChild(el);
+  return el;
+}
+
+/* ======================================================================
+   TEMPORIZADOR DE DESCANSO
+   ====================================================================== */
+const timerOverlay = document.getElementById('timer-overlay');
+const timerRing = document.getElementById('timer-ring');
+const timerTimeEl = document.getElementById('timer-time');
+const timerExNameEl = document.getElementById('timer-ex-name');
+const RING_CIRCUMFERENCE = 2 * Math.PI * 98;
+timerRing.setAttribute('stroke-dasharray', RING_CIRCUMFERENCE.toFixed(2));
+
+let timerState = null; // { totalSec, endsAt, rafId }
+
+function startRestTimer(seconds, exName) {
+  clearTimerLoop();
+  timerExNameEl.textContent = exName;
+  timerState = { totalSec: seconds, endsAt: Date.now() + seconds * 1000 };
+  timerOverlay.classList.add('show');
+  tickTimer();
+}
+
+function tickTimer() {
+  if (!timerState) return;
+  const remainingMs = timerState.endsAt - Date.now();
+  const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+  const mm = String(Math.floor(remainingSec / 60)).padStart(2, '0');
+  const ss = String(remainingSec % 60).padStart(2, '0');
+  timerTimeEl.textContent = `${mm}:${ss}`;
+
+  const elapsedFrac = 1 - Math.max(0, remainingMs) / (timerState.totalSec * 1000);
+  const offset = RING_CIRCUMFERENCE * Math.min(1, Math.max(0, elapsedFrac));
+  timerRing.setAttribute('stroke-dashoffset', offset.toFixed(2));
+
+  if (remainingMs <= 0) {
+    finishRestTimer();
+    return;
+  }
+  timerState.rafId = requestAnimationFrame(tickTimer);
+}
+
+function finishRestTimer() {
+  playBeep();
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300]);
+  timerTimeEl.textContent = '00:00';
+  timerRing.setAttribute('stroke-dashoffset', RING_CIRCUMFERENCE.toFixed(2));
+  setTimeout(() => {
+    if (timerState) closeTimer();
+  }, 1200);
+}
+
+function clearTimerLoop() {
+  if (timerState && timerState.rafId) cancelAnimationFrame(timerState.rafId);
+}
+
+function closeTimer() {
+  clearTimerLoop();
+  timerState = null;
+  timerOverlay.classList.remove('show');
+}
+
+document.getElementById('timer-skip').addEventListener('click', closeTimer);
+document.getElementById('timer-add').addEventListener('click', () => {
+  if (!timerState) return;
+  timerState.endsAt += 15000;
+  timerState.totalSec += 15;
+});
+
+let audioCtx = null;
+function playBeep() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const beepAt = (delay) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + delay + 0.18);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(audioCtx.currentTime + delay);
+      osc.stop(audioCtx.currentTime + delay + 0.2);
+    };
+    beepAt(0);
+    beepAt(0.25);
+    beepAt(0.5);
+  } catch (e) { /* audio no disponible */ }
+}
+
+/* ======================================================================
+   RENDER: VISTA SEMANA
+   ====================================================================== */
+const weekListEl = document.getElementById('week-list');
+
+function renderWeekView() {
+  weekListEl.innerHTML = '';
+  const monday = mondayOfWeek(new Date());
+  ROUTINE.order.forEach((dayKey, i) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    const dateISO = isoFromDate(date);
+    const { total, done } = computeDayProgress(dateISO, dayKey);
+    const pct = total ? Math.round((done / total) * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'week-card';
+    const r = 20, c = 2 * Math.PI * r;
+    const offset = c - (c * pct) / 100;
+    card.innerHTML = `
+      <div class="info">
+        <div class="day-name">${DAY_LABELS[dayKey]}</div>
+        <div class="day-focus">${ROUTINE.dias[dayKey].nombre} · ${ddmmFromISO(dateISO)}</div>
+      </div>
+      <div class="week-ring">
+        <svg viewBox="0 0 46 46">
+          <circle cx="23" cy="23" r="${r}" stroke="#2A2D36" stroke-width="5" fill="none"></circle>
+          <circle cx="23" cy="23" r="${r}" stroke="#C9A227" stroke-width="5" fill="none"
+            stroke-linecap="round" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"></circle>
+        </svg>
+        <div class="pct">${pct}%</div>
+      </div>
+    `;
+    weekListEl.appendChild(card);
+  });
+}
+
+/* ======================================================================
+   VISTA: PROGRESO SECA mBCA
+   ====================================================================== */
+const metricSelect = document.getElementById('metric-select');
+const METRIC_FIELDS = { peso: 'peso', grasa: 'grasa', smm: 'smm', angulo: 'angulo' };
+const METRIC_LABELS = { peso: 'Peso (kg)', grasa: 'Grasa (kg)', smm: 'SMM (kg)', angulo: 'Ángulo de fase' };
+
+document.getElementById('m-fecha').value = todayISO();
+
+document.getElementById('add-measurement-btn').addEventListener('click', () => {
+  const fecha = document.getElementById('m-fecha').value || todayISO();
+  const peso = document.getElementById('m-peso').value;
+  const grasa = document.getElementById('m-grasa').value;
+  const smm = document.getElementById('m-smm').value;
+  const angulo = document.getElementById('m-angulo').value;
+
+  if (!peso && !grasa && !smm && !angulo) {
+    showToast('Agrega al menos un valor');
+    return;
+  }
+
+  measurements = measurements.filter((m) => m.fecha !== fecha);
+  measurements.push({ fecha, peso, grasa, smm, angulo });
+  measurements.sort((a, b) => a.fecha.localeCompare(b.fecha));
+  saveJSON(LS_MEASUREMENTS, measurements);
+
+  document.getElementById('m-peso').value = '';
+  document.getElementById('m-grasa').value = '';
+  document.getElementById('m-smm').value = '';
+  document.getElementById('m-angulo').value = '';
+
+  showToast('Medición agregada');
+  renderProgressView();
+});
+
+metricSelect.addEventListener('change', renderChart);
+
+let trendChart = null;
+function renderChart() {
+  const canvas = document.getElementById('trend-chart');
+  const emptyEl = document.getElementById('chart-empty');
+  const metric = metricSelect.value;
+  const points = measurements.filter((m) => m[METRIC_FIELDS[metric]] !== '' && m[METRIC_FIELDS[metric]] != null);
+
+  if (points.length < 2 || typeof Chart === 'undefined') {
+    canvas.style.display = 'none';
+    emptyEl.style.display = 'block';
+    if (trendChart) { trendChart.destroy(); trendChart = null; }
+    return;
+  }
+  canvas.style.display = 'block';
+  emptyEl.style.display = 'none';
+
+  const labels = points.map((m) => ddmmFromISO(m.fecha));
+  const data = points.map((m) => parseFloat(m[METRIC_FIELDS[metric]]));
+
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: METRIC_LABELS[metric],
+        data,
+        borderColor: '#C9A227',
+        backgroundColor: 'rgba(201,162,39,0.12)',
+        tension: 0.3,
+        fill: true,
+        pointBackgroundColor: '#3A6B5C',
+        pointRadius: 4,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#9AA0AC' }, grid: { color: '#2A2D36' } },
+        y: { ticks: { color: '#9AA0AC' }, grid: { color: '#2A2D36' } },
+      },
+    },
+  });
+}
+
+function renderHistory() {
+  const listEl = document.getElementById('history-list');
+  const emptyEl = document.getElementById('history-empty');
+  listEl.innerHTML = '';
+
+  if (!measurements.length) {
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  [...measurements].reverse().forEach((m) => {
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    const vals = [
+      m.peso ? `${m.peso}kg` : null,
+      m.grasa ? `grasa ${m.grasa}kg` : null,
+      m.smm ? `SMM ${m.smm}kg` : null,
+      m.angulo ? `∠ ${m.angulo}°` : null,
+    ].filter(Boolean).join(' · ');
+    row.innerHTML = `
+      <div class="history-date">${ddmmFromISO(m.fecha)}</div>
+      <div class="history-vals">${vals || '—'}</div>
+      <button class="history-del">✕</button>
+    `;
+    row.querySelector('.history-del').addEventListener('click', () => {
+      measurements = measurements.filter((x) => x.fecha !== m.fecha);
+      saveJSON(LS_MEASUREMENTS, measurements);
+      renderProgressView();
+    });
+    listEl.appendChild(row);
+  });
+}
+
+function renderProgressView() {
+  renderChart();
+  renderHistory();
+}
+
+/* ======================================================================
+   NAVEGACIÓN POR TABS
+   ====================================================================== */
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+    if (btn.dataset.view === 'view-week') renderWeekView();
+    if (btn.dataset.view === 'view-progress') renderProgressView();
+    if (btn.dataset.view === 'view-day') renderDayView();
+  });
+});
+
+/* ======================================================================
+   INIT
+   ====================================================================== */
+renderDayView();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
