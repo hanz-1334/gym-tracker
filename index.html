@@ -848,8 +848,27 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
 renderDayView();
 
 if ('serviceWorker' in navigator) {
+  // En cuanto una versión nueva del service worker toma el control (gracias a
+  // skipWaiting + clients.claim en sw.js), recarga una vez para mostrar el
+  // HTML/JS nuevo. Sin esto, el navegador instala la actualización en segundo
+  // plano pero la página ya abierta se queda mostrando el contenido viejo
+  // hasta un segundo reinicio manual de la app.
+  let refreshedOnce = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshedOnce) return;
+    refreshedOnce = true;
+    window.location.reload();
+  });
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // Fuerza una revisión de actualización cada vez que la app vuelve a
+      // primer plano (abrir el ícono, volver de segundo plano), en vez de
+      // esperar a que el navegador decida revisar por su cuenta.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(() => {});
   });
 }
 </script>
