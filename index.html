@@ -467,7 +467,15 @@ if (!currentDay || !ROUTINE.dias[currentDay]) {
   const wd = weekdayKeyForDate(new Date());
   currentDay = ROUTINE.dias[wd] ? wd : 'lunes';
 }
-const currentLogDate = todayISO(); // toda edición del día se guarda bajo la fecha de hoy
+function logDateForDay(dayKey) {
+  // cada chip de día corresponde a la fecha de esa jornada en la semana actual,
+  // no a la fecha de hoy, para poder ver/editar un día ya realizado
+  const idx = ROUTINE.order.indexOf(dayKey);
+  const monday = mondayOfWeek(new Date());
+  const date = new Date(monday);
+  date.setDate(monday.getDate() + idx);
+  return isoFromDate(date);
+}
 
 /* ======================================================================
    ACCESO A PROGRESO DEL DÍA ACTUAL
@@ -500,9 +508,9 @@ function setSetState(dateISO, dayKey, exKey, setIndex, patch) {
 // Busca la sesión anterior más reciente (en cualquier día) donde este
 // ejercicio -identificado por nombre, no por posición- tenga series
 // marcadas como completadas. Así sobrevive a cambios de bloque de rutina.
-function findLastTime(exName) {
+function findLastTime(exName, logDate) {
   const dates = Object.keys(progressData)
-    .filter((d) => d !== currentLogDate && d < currentLogDate)
+    .filter((d) => d !== logDate && d < logDate)
     .sort()
     .reverse();
   for (const d of dates) {
@@ -557,7 +565,7 @@ function computeDayProgress(dateISO, dayKey) {
 }
 
 function renderProgressBar() {
-  const { total, done } = computeDayProgress(currentLogDate, currentDay);
+  const { total, done } = computeDayProgress(logDateForDay(currentDay), currentDay);
   const pct = total ? Math.round((done / total) * 100) : 0;
   progressFillEl.style.width = pct + '%';
   progressTextEl.textContent = `${done} / ${total} series`;
@@ -567,13 +575,14 @@ function renderProgressBar() {
 function renderExerciseList() {
   exerciseListEl.innerHTML = '';
   const dia = ROUTINE.dias[currentDay];
+  const logDate = logDateForDay(currentDay);
   document.getElementById('header-subtitle').textContent = `${DAY_LABELS[currentDay]} · ${dia.nombre}`;
 
   dia.ejercicios.forEach((ex) => {
     const card = document.createElement('div');
     card.className = 'exercise-card';
 
-    const last = findLastTime(ex.nombre);
+    const last = findLastTime(ex.nombre, logDate);
     const noteHtml = ex.nota ? `<div class="exercise-note">${ex.nota}</div>` : '';
 
     card.innerHTML = `
@@ -586,7 +595,7 @@ function renderExerciseList() {
 
     const setsContainer = card.querySelector('.sets-container');
     for (let s = 0; s < ex.sets; s++) {
-      const state = getSetState(currentLogDate, currentDay, ex.nombre, s);
+      const state = getSetState(logDate, currentDay, ex.nombre, s);
       const row = document.createElement('div');
       row.className = 'set-row';
       row.innerHTML = `
@@ -599,15 +608,15 @@ function renderExerciseList() {
       const checkBtn = row.querySelector('.check-btn');
 
       kgInput.addEventListener('input', () => {
-        setSetState(currentLogDate, currentDay, ex.nombre, s, { kg: kgInput.value });
+        setSetState(logDate, currentDay, ex.nombre, s, { kg: kgInput.value });
       });
       repsInput.addEventListener('input', () => {
-        setSetState(currentLogDate, currentDay, ex.nombre, s, { reps: repsInput.value });
+        setSetState(logDate, currentDay, ex.nombre, s, { reps: repsInput.value });
       });
       checkBtn.addEventListener('click', () => {
-        const cur = getSetState(currentLogDate, currentDay, ex.nombre, s);
+        const cur = getSetState(logDate, currentDay, ex.nombre, s);
         const willBeDone = !cur.done;
-        setSetState(currentLogDate, currentDay, ex.nombre, s, { done: willBeDone });
+        setSetState(logDate, currentDay, ex.nombre, s, { done: willBeDone });
         checkBtn.classList.toggle('done', willBeDone);
         checkBtn.textContent = willBeDone ? '✓' : '';
         renderProgressBar();
