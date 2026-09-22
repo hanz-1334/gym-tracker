@@ -60,14 +60,37 @@
     margin-top: 2px;
   }
 
+  /* ---------- Selector de sección (Gym / Comida) ---------- */
+  .section-switch {
+    display: flex; gap: 8px;
+    padding: 12px 16px 0;
+    max-width: 640px; margin: 0 auto;
+  }
+  .section-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .section-btn .icon { font-size: 15px; }
+  .section-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #13151A;
+  }
+
   /* ---------- Views ---------- */
   .view { display: none; padding: 16px; max-width: 640px; margin: 0 auto; }
   .view.active { display: block; }
 
   /* ---------- Day selector chips ---------- */
   .day-chips {
-    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px;
-    -webkit-overflow-scrolling: touch;
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
   }
   .day-chip {
     flex: 0 0 auto;
@@ -220,6 +243,141 @@
     font-size: 11px; font-weight: 700; color: var(--gold);
   }
 
+  /* ---------- Tarjetas y formularios genéricos (usados por Alimentación) ---------- */
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 14px; color: var(--gold); margin-bottom: 12px; font-weight: 700; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field label { font-size: 11.5px; color: var(--text-dim); }
+  .form-field input {
+    width: 100%;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+  }
+  .form-field input:focus { outline: none; border-color: var(--gold); }
+  .date-range-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 12px;
+  }
+  .download-btn-inline {
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+
+  /* ---------- Alimentación: formulario de captura rápida ---------- */
+  .meal-form h2 { margin-bottom: 10px; }
+  .meal-desc-input {
+    width: 100%;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 10px;
+  }
+  .meal-desc-input:focus { outline: none; border-color: var(--gold); }
+  .meal-desc-input::placeholder { color: #565A66; }
+
+  /* variante para el chip de snack_extra: aro dorado siempre visible,
+     así resalta entre las 7 opciones para captura sin fricción */
+  .day-chip.chip-accent {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .day-chip.chip-accent.active {
+    background: var(--gold);
+    color: #13151A;
+  }
+
+  /* ---------- Alimentación: tarjetas de registro (hoy / historial) ---------- */
+  .meal-day-group {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .meal-day-title {
+    font-size: 14px; font-weight: 700; color: var(--text);
+    margin-bottom: 8px;
+  }
+  .meal-day-title .count { color: var(--text-dim); font-weight: 500; font-size: 12px; }
+  .meal-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .meal-row:last-child { border-bottom: none; }
+  .meal-badge {
+    flex-shrink: 0;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--gold);
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .meal-badge.snack { border-color: var(--gold); }
+  .meal-desc-text {
+    flex: 1;
+    font-size: 13px; color: var(--text); line-height: 1.4;
+    word-break: break-word;
+    padding-top: 2px;
+  }
+  .meal-row-actions { display: flex; gap: 2px; flex-shrink: 0; }
+  .meal-icon-btn {
+    background: none; border: none;
+    color: var(--text-dim);
+    font-size: 15px;
+    padding: 4px 6px;
+  }
+  .meal-icon-btn.danger { color: var(--danger); }
+  .meal-empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 16px 0; }
+
+  .meal-edit-row {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .meal-edit-row:last-child { border-bottom: none; }
+  .meal-edit-actions { display: flex; gap: 8px; }
+  .meal-edit-actions button {
+    flex: 1;
+    padding: 9px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev-2);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .meal-edit-actions button.primary {
+    background: var(--gold); border-color: var(--gold); color: #13151A;
+  }
+
   /* ---------- Bottom nav ---------- */
   nav.tabbar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -288,8 +446,13 @@
   <div class="subtitle" id="header-subtitle">Bloque 5</div>
 </header>
 
+<div class="section-switch">
+  <button class="section-btn active" data-section="gym"><span class="icon">🏋️</span>Gym</button>
+  <button class="section-btn" data-section="food"><span class="icon">🍽️</span>Comida</button>
+</div>
+
 <!-- ================= VISTA: RUTINA DEL DÍA ================= -->
-<section class="view active" id="view-day">
+<section class="view active" id="view-day" data-section="gym">
   <div class="day-chips" id="day-chips"></div>
 
   <div class="progress-wrap">
@@ -306,10 +469,39 @@
 </section>
 
 <!-- ================= VISTA: SEMANA ================= -->
-<section class="view" id="view-week">
+<section class="view" id="view-week" data-section="gym">
   <div id="week-list"></div>
 </section>
 
+<!-- ================= VISTA: ALIMENTACIÓN — HOY ================= -->
+<section class="view" id="view-food-today" data-section="food">
+  <div class="meal-form card">
+    <h2 id="food-today-heading">Hoy</h2>
+    <div class="day-chips" id="meal-type-chips"></div>
+    <textarea id="meal-desc-input" class="meal-desc-input" rows="2" placeholder="¿Qué comiste?"></textarea>
+    <button class="save-day-btn" id="add-meal-btn">Agregar</button>
+  </div>
+  <div id="food-today-list"></div>
+</section>
+
+<!-- ================= VISTA: ALIMENTACIÓN — HISTORIAL ================= -->
+<section class="view" id="view-food-history" data-section="food">
+  <div class="card">
+    <h2>Descargar alimentación</h2>
+    <div class="date-range-grid">
+      <div class="form-field">
+        <label for="food-range-from">Desde</label>
+        <input type="date" id="food-range-from">
+      </div>
+      <div class="form-field">
+        <label for="food-range-to">Hasta</label>
+        <input type="date" id="food-range-to">
+      </div>
+    </div>
+    <button class="download-btn-inline" id="download-food-btn"><span class="icon">⬇️</span>Descargar CSV</button>
+  </div>
+  <div id="food-history-list"></div>
+</section>
 
 <!-- ================= REST TIMER OVERLAY ================= -->
 <div class="timer-overlay" id="timer-overlay">
@@ -329,10 +521,15 @@
   </div>
 </div>
 
-<nav class="tabbar">
+<nav class="tabbar" data-section="gym">
   <button class="tab-btn active" data-view="view-day"><span class="icon">🏋️</span>Rutina</button>
   <button class="tab-btn" data-view="view-week"><span class="icon">📅</span>Semana</button>
   <button class="download-btn" id="download-progress-btn"><span class="icon">⬇️</span>Descargar progreso</button>
+</nav>
+
+<nav class="tabbar" data-section="food" style="display:none;">
+  <button class="tab-btn" data-view="view-food-today"><span class="icon">🍽️</span>Hoy</button>
+  <button class="tab-btn" data-view="view-food-history"><span class="icon">📋</span>Historial</button>
 </nav>
 
 <script>
@@ -406,7 +603,11 @@ const ROUTINE = {
     },
   },
 };
-const DAY_LABELS = { lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes' };
+const DAY_LABELS = {
+  lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes',
+  // sábado/domingo no tienen día de rutina de gym, pero Alimentación registra los 7 días
+  sabado: 'Sábado', domingo: 'Domingo',
+};
 /* ==================== FIN ZONA DE RUTINA ==================== */
 
 
@@ -829,6 +1030,295 @@ document.getElementById('download-progress-btn').addEventListener('click', () =>
 });
 
 /* ======================================================================
+   ZONA DE ALIMENTACIÓN — registro diario de comidas
+   Complemento del tracking de gym: mismo patrón de storage (localStorage
+   + JSON), mismos componentes visuales (day-chip, card, toast) y mismo
+   tipo de export a CSV descargable.
+   ====================================================================== */
+const MEAL_TYPES = [
+  { key: 'desayuno', label: 'Desayuno' },
+  { key: 'pre_entreno', label: 'Pre-entreno' },
+  { key: 'post_entreno', label: 'Post-entreno' },
+  { key: 'comida', label: 'Comida' },
+  { key: 'tarde', label: 'Tarde' },
+  { key: 'cena', label: 'Cena' },
+  { key: 'snack_extra', label: 'Snack / antojo' }, // categoría más importante: antojos fuera de las comidas principales
+];
+const MEAL_LABELS = Object.fromEntries(MEAL_TYPES.map((m) => [m.key, m.label]));
+
+const LS_FOOD = 'food_entries'; // [{ id, fecha, tipoComida, descripcion, creadoEn }]
+let foodEntries = loadJSON(LS_FOOD, []);
+let selectedMealType = 'desayuno';
+let editingMealId = null;
+
+function saveFoodEntries() {
+  saveJSON(LS_FOOD, foodEntries);
+}
+function addFoodEntry(fecha, tipoComida, descripcion) {
+  foodEntries.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    fecha, tipoComida, descripcion,
+    creadoEn: Date.now(),
+  });
+  saveFoodEntries();
+}
+function updateFoodEntry(id, patch) {
+  const entry = foodEntries.find((e) => e.id === id);
+  if (!entry) return;
+  Object.assign(entry, patch);
+  saveFoodEntries();
+}
+function deleteFoodEntry(id) {
+  foodEntries = foodEntries.filter((e) => e.id !== id);
+  saveFoodEntries();
+}
+function entriesForDate(fecha) {
+  return foodEntries.filter((e) => e.fecha === fecha).sort((a, b) => a.creadoEn - b.creadoEn);
+}
+function entriesInRange(fromISO, toISO) {
+  return foodEntries
+    .filter((e) => e.fecha >= fromISO && e.fecha <= toISO)
+    .sort((a, b) => (a.fecha === b.fecha ? a.creadoEn - b.creadoEn : a.fecha.localeCompare(b.fecha)));
+}
+function dayLabelForISO(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return DAY_LABELS[weekdayKeyForDate(new Date(y, m - 1, d))] || '';
+}
+
+/* ---- selector de tipo de comida (mismo componente visual que day-chip) ---- */
+const mealTypeChipsEl = document.getElementById('meal-type-chips');
+function renderMealTypeChips() {
+  mealTypeChipsEl.innerHTML = '';
+  MEAL_TYPES.forEach((mt) => {
+    const btn = document.createElement('button');
+    btn.className = 'day-chip'
+      + (mt.key === 'snack_extra' ? ' chip-accent' : '')
+      + (mt.key === selectedMealType ? ' active' : '');
+    btn.textContent = mt.label;
+    btn.addEventListener('click', () => {
+      selectedMealType = mt.key;
+      renderMealTypeChips();
+    });
+    mealTypeChipsEl.appendChild(btn);
+  });
+}
+
+document.getElementById('add-meal-btn').addEventListener('click', () => {
+  const descInput = document.getElementById('meal-desc-input');
+  const descripcion = descInput.value.trim();
+  if (!descripcion) {
+    showToast('Escribe qué comiste');
+    return;
+  }
+  addFoodEntry(todayISO(), selectedMealType, descripcion);
+  descInput.value = '';
+  showToast('Comida agregada');
+  renderFoodTodayView();
+});
+
+/* ---- una fila de comida, en modo lectura o edición inline ---- */
+function renderMealRow(entry, container) {
+  if (editingMealId === entry.id) {
+    const row = document.createElement('div');
+    row.className = 'meal-edit-row';
+
+    const chipsWrap = document.createElement('div');
+    chipsWrap.className = 'day-chips';
+    let editType = entry.tipoComida;
+    MEAL_TYPES.forEach((mt) => {
+      const chip = document.createElement('button');
+      chip.className = 'day-chip'
+        + (mt.key === 'snack_extra' ? ' chip-accent' : '')
+        + (mt.key === editType ? ' active' : '');
+      chip.textContent = mt.label;
+      chip.addEventListener('click', () => {
+        editType = mt.key;
+        chipsWrap.querySelectorAll('.day-chip').forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+      chipsWrap.appendChild(chip);
+    });
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'meal-desc-input';
+    textarea.rows = 2;
+    textarea.value = entry.descripcion;
+
+    const actions = document.createElement('div');
+    actions.className = 'meal-edit-actions';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancelar';
+    cancelBtn.addEventListener('click', () => {
+      editingMealId = null;
+      renderFoodTodayView();
+      renderFoodHistoryView();
+    });
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'primary';
+    saveBtn.textContent = 'Guardar';
+    saveBtn.addEventListener('click', () => {
+      const desc = textarea.value.trim();
+      if (!desc) { showToast('Escribe qué comiste'); return; }
+      updateFoodEntry(entry.id, { tipoComida: editType, descripcion: desc });
+      editingMealId = null;
+      showToast('Entrada actualizada');
+      renderFoodTodayView();
+      renderFoodHistoryView();
+    });
+    actions.appendChild(cancelBtn);
+    actions.appendChild(saveBtn);
+
+    row.appendChild(chipsWrap);
+    row.appendChild(textarea);
+    row.appendChild(actions);
+    container.appendChild(row);
+    return;
+  }
+
+  const row = document.createElement('div');
+  row.className = 'meal-row';
+
+  const badge = document.createElement('span');
+  badge.className = 'meal-badge' + (entry.tipoComida === 'snack_extra' ? ' snack' : '');
+  badge.textContent = MEAL_LABELS[entry.tipoComida] || entry.tipoComida;
+
+  const desc = document.createElement('span');
+  desc.className = 'meal-desc-text';
+  desc.textContent = entry.descripcion;
+
+  const actions = document.createElement('div');
+  actions.className = 'meal-row-actions';
+  const editBtn = document.createElement('button');
+  editBtn.className = 'meal-icon-btn';
+  editBtn.textContent = '✎';
+  editBtn.addEventListener('click', () => {
+    editingMealId = entry.id;
+    renderFoodTodayView();
+    renderFoodHistoryView();
+  });
+  const delBtn = document.createElement('button');
+  delBtn.className = 'meal-icon-btn danger';
+  delBtn.textContent = '✕';
+  delBtn.addEventListener('click', () => {
+    deleteFoodEntry(entry.id);
+    showToast('Entrada eliminada');
+    renderFoodTodayView();
+    renderFoodHistoryView();
+  });
+  actions.appendChild(editBtn);
+  actions.appendChild(delBtn);
+
+  row.appendChild(badge);
+  row.appendChild(desc);
+  row.appendChild(actions);
+  container.appendChild(row);
+}
+
+/* ---- vista Hoy: captura rápida + lo ya registrado hoy ---- */
+function renderFoodTodayView() {
+  renderMealTypeChips();
+  const today = todayISO();
+  document.getElementById('food-today-heading').textContent = `Hoy · ${dayLabelForISO(today)} ${ddmmFromISO(today)}`;
+
+  const listEl = document.getElementById('food-today-list');
+  listEl.innerHTML = '';
+  const entries = entriesForDate(today);
+  if (!entries.length) return;
+
+  const group = document.createElement('div');
+  group.className = 'meal-day-group';
+  const title = document.createElement('div');
+  title.className = 'meal-day-title';
+  title.innerHTML = `Registrado hoy <span class="count">(${entries.length})</span>`;
+  group.appendChild(title);
+  entries.forEach((e) => renderMealRow(e, group));
+  listEl.appendChild(group);
+}
+
+/* ---- vista Historial: agrupado por día, con export CSV por rango ---- */
+function renderFoodHistoryView() {
+  const listEl = document.getElementById('food-history-list');
+  listEl.innerHTML = '';
+  const dates = [...new Set(foodEntries.map((e) => e.fecha))].sort().reverse();
+  if (!dates.length) {
+    listEl.innerHTML = '<div class="meal-empty">Aún no hay comidas registradas.</div>';
+    return;
+  }
+  dates.forEach((fecha) => {
+    const entries = entriesForDate(fecha);
+    const group = document.createElement('div');
+    group.className = 'meal-day-group';
+    const title = document.createElement('div');
+    title.className = 'meal-day-title';
+    title.innerHTML = `${dayLabelForISO(fecha)} ${ddmmFromISO(fecha)} <span class="count">(${entries.length})</span>`;
+    group.appendChild(title);
+    entries.forEach((e) => renderMealRow(e, group));
+    listEl.appendChild(group);
+  });
+}
+
+/* ---- export CSV por rango de fechas (default: semana en curso, Lun-Dom) ---- */
+function buildFoodCSV(fromISO, toISO) {
+  const rows = [['fecha', 'dia', 'tipo_comida', 'descripcion']];
+  entriesInRange(fromISO, toISO).forEach((e) => {
+    rows.push([e.fecha, dayLabelForISO(e.fecha), e.tipoComida, e.descripcion]);
+  });
+  return rows.map((r) => r.map(csvField).join(',')).join('\r\n');
+}
+
+const foodRangeFromEl = document.getElementById('food-range-from');
+const foodRangeToEl = document.getElementById('food-range-to');
+
+function setDefaultFoodRange() {
+  const monday = mondayOfWeek(new Date());
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  foodRangeFromEl.value = isoFromDate(monday);
+  foodRangeToEl.value = isoFromDate(sunday);
+}
+setDefaultFoodRange();
+
+document.getElementById('download-food-btn').addEventListener('click', () => {
+  const from = foodRangeFromEl.value;
+  const to = foodRangeToEl.value;
+  if (!from || !to || from > to) {
+    showToast('Revisa el rango de fechas');
+    return;
+  }
+  const csv = buildFoodCSV(from, to);
+  if (csv.split('\r\n').length <= 1) {
+    showToast('No hay comidas en ese rango');
+    return;
+  }
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `alimentacion-${from}_a_${to}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+/* ======================================================================
+   SELECTOR DE SECCIÓN (Gym / Comida)
+   ====================================================================== */
+document.querySelectorAll('.section-btn').forEach((btn) => {
+  btn.addEventListener('click', () => setSection(btn.dataset.section));
+});
+
+function setSection(section) {
+  document.querySelectorAll('.section-btn').forEach((b) => b.classList.toggle('active', b.dataset.section === section));
+  document.querySelectorAll('nav.tabbar').forEach((n) => {
+    n.style.display = n.dataset.section === section ? 'flex' : 'none';
+  });
+  const nav = document.querySelector(`nav.tabbar[data-section="${section}"]`);
+  const firstTab = nav && nav.querySelector('.tab-btn');
+  if (firstTab) firstTab.click();
+}
+
+/* ======================================================================
    NAVEGACIÓN POR TABS
    ====================================================================== */
 document.querySelectorAll('.tab-btn').forEach((btn) => {
@@ -839,6 +1329,8 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
     document.getElementById(btn.dataset.view).classList.add('active');
     if (btn.dataset.view === 'view-week') renderWeekView();
     if (btn.dataset.view === 'view-day') renderDayView();
+    if (btn.dataset.view === 'view-food-today') renderFoodTodayView();
+    if (btn.dataset.view === 'view-food-history') renderFoodHistoryView();
   });
 });
 
