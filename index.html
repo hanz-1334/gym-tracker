@@ -177,6 +177,15 @@
   }
   .set-row input:focus { outline: none; border-color: var(--gold); }
   .set-row input::placeholder { color: #565A66; }
+  .exercise-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .unit-toggle {
+    flex: 0 0 auto; display: flex; padding: 2px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--bg-elev-2);
+  }
+  .unit-toggle span {
+    padding: 6px 10px; border-radius: 7px; font-size: 12px; font-weight: 700; color: var(--text-dim);
+  }
+  .unit-toggle span.on { background: var(--gold); color: #13151A; }
   .set-row.uni { grid-template-columns: 34px 1fr 1fr 40px; }
   .set-row.side-last { margin-bottom: 14px; }
 
@@ -668,7 +677,11 @@ const DAY_LABELS = {
    ====================================================================== */
 // { "YYYY-MM-DD": { dayKey: { "<nombre del ejercicio>": { sets: [{kg,reps,done}], setsI?: [...] } } } }
 // En ejercicios unilaterales `sets` es el lado derecho y `setsI` el izquierdo.
+// El campo `kg` de cada serie guarda el número tal como se escribió, en la
+// unidad del ejercicio ese día (`unit`: 'kg' o 'lb'; sin `unit` = kg).
 const LS_PROGRESS = 'gym_progress';
+const LS_UNIT = 'gym_unit'; // última unidad elegida; se propone en los ejercicios aún sin registro
+const LB_TO_KG = 0.45359237;
 const LS_CURRENT_DAY = 'gym_current_day'; // "lunes" | "martes" | ...
 
 function loadJSON(key, fallback) {
@@ -790,21 +803,46 @@ function getSetState(dateISO, dayKey, exKey, setIndex, field = 'sets') {
 }
 function setSetState(dateISO, dayKey, exKey, setIndex, patch, field = 'sets') {
   const dayEntry = getDayEntry(dateISO, dayKey, true);
-  if (!dayEntry[exKey]) dayEntry[exKey] = { sets: [] };
+  if (!dayEntry[exKey]) dayEntry[exKey] = { sets: [], unit: defaultUnit };
   const entry = dayEntry[exKey];
   if (!entry[field]) entry[field] = [];
   if (!entry[field][setIndex]) entry[field][setIndex] = { kg: '', reps: '', done: false };
   Object.assign(entry[field][setIndex], patch);
   saveJSON(LS_PROGRESS, progressData);
 }
+let defaultUnit = loadJSON(LS_UNIT, 'kg') === 'lb' ? 'lb' : 'kg';
+function getUnit(dateISO, dayKey, exKey) {
+  const dayEntry = getDayEntry(dateISO, dayKey, false);
+  const entry = dayEntry && dayEntry[exKey];
+  return entry ? (entry.unit || 'kg') : defaultUnit;
+}
+function setUnit(dateISO, dayKey, exKey, unit) {
+  const dayEntry = getDayEntry(dateISO, dayKey, true);
+  if (!dayEntry[exKey]) dayEntry[exKey] = { sets: [] };
+  dayEntry[exKey].unit = unit;
+  defaultUnit = unit;
+  saveJSON(LS_UNIT, unit);
+  saveJSON(LS_PROGRESS, progressData);
+}
+function toKg(value, unit) {
+  const n = parseFloat(value);
+  if (isNaN(n)) return '';
+  return unit === 'lb' ? Math.round(n * LB_TO_KG * 100) / 100 : n;
+}
+// Pasa un peso de una unidad a otra, redondeado a pasos reales de pesa (0.5 kg / 1 lb).
+function convertWeight(value, from, to) {
+  const n = parseFloat(value);
+  if (isNaN(n) || from === to) return value;
+  return String(to === 'kg' ? Math.round(n * LB_TO_KG * 2) / 2 : Math.round(n / LB_TO_KG));
+}
 // Una serie unilateral cuenta como hecha cuando están marcados ambos lados.
 function isSeriesDone(dateISO, dayKey, ex, setIndex) {
   return sidesFor(ex).every((sd) => getSetState(dateISO, dayKey, ex.nombre, setIndex, sd.field).done);
 }
-function doneSetsText(sets) {
+function doneSetsText(sets, unit) {
   return (sets || [])
     .filter((s) => s && s.done)
-    .map((s) => (s.kg ? `${s.kg}kg×${s.reps || '?'}` : `${s.reps || '?'}`))
+    .map((s) => (s.kg ? `${s.kg}${unit}×${s.reps || '?'}` : `${s.reps || '?'}`))
     .join(' · ');
 }
 
@@ -821,13 +859,14 @@ function findLastTime(exName, logDate) {
     for (const dk of Object.keys(dayEntries)) {
       const entry = dayEntries[dk] && dayEntries[dk][exName];
       if (!entry) continue;
-      const right = doneSetsText(entry.sets);
-      const left = doneSetsText(entry.setsI);
+      const unit = entry.unit || 'kg';
+      const right = doneSetsText(entry.sets, unit);
+      const left = doneSetsText(entry.setsI, unit);
       if (!right && !left) continue;
       const html = left
         ? `<br>D: <strong>${right || '—'}</strong><br>I: <strong>${left}</strong>`
         : ` <strong>${right}</strong>`;
-      return { date: d, entry, html };
+      return { date: d, entry, unit, html };
     }
   }
   return null;
@@ -901,13 +940,27 @@ function renderExerciseList() {
     const noteHtml = ex.nota ? `<div class="exercise-note">${ex.nota}</div>` : '';
     const restHtml = ex.restSec ? ` · descanso ${restLabel(ex.restSec)}` : '';
 
+    const unit = getUnit(logDate, currentDay, ex.nombre);
+
     card.innerHTML = `
-      <div class="exercise-title">${ex.nombre}</div>
-      <div class="exercise-meta">${ex.sets}×${ex.repsLabel}${restHtml}</div>
+      <div class="exercise-head">
+        <div>
+          <div class="exercise-title">${ex.nombre}</div>
+          <div class="exercise-meta">${ex.sets}×${ex.repsLabel}${restHtml}</div>
+        </div>
+        <button class="unit-toggle" aria-label="Cambiar entre kilos y libras">
+          <span class="${unit === 'kg' ? 'on' : ''}">kg</span><span class="${unit === 'lb' ? 'on' : ''}">lb</span>
+        </button>
+      </div>
       ${noteHtml}
       <div class="exercise-last">${last ? `Última vez ${ddmmFromISO(last.date)}:${last.html}` : 'Sin registro previo'}</div>
       <div class="sets-container"></div>
     `;
+
+    card.querySelector('.unit-toggle').addEventListener('click', () => {
+      setUnit(logDate, currentDay, ex.nombre, unit === 'kg' ? 'lb' : 'kg');
+      renderExerciseList();
+    });
 
     const setsContainer = card.querySelector('.sets-container');
     const sides = sidesFor(ex);
@@ -916,13 +969,14 @@ function renderExerciseList() {
         const state = getSetState(logDate, currentDay, ex.nombre, s, side.field);
         // valores de la sesión anterior: se muestran como guía y se usan al marcar ✓ sin escribir nada
         const prevSets = last && (last.entry[side.field] || last.entry.sets);
-        const prev = (prevSets && prevSets[s] && prevSets[s].done) ? prevSets[s] : null;
+        const prevSet = (prevSets && prevSets[s] && prevSets[s].done) ? prevSets[s] : null;
+        const prev = prevSet && { kg: convertWeight(prevSet.kg, last.unit, unit), reps: prevSet.reps };
 
         const row = document.createElement('div');
         row.className = 'set-row' + (ex.uni ? ' uni' : '') + (ex.uni && sideIdx === sides.length - 1 ? ' side-last' : '');
         row.innerHTML = `
           <div class="set-num">${s + 1}${ex.uni ? ' ' + side.tag : ''}</div>
-          <input type="number" inputmode="decimal" placeholder="${(prev && prev.kg) || 'kg'}" value="${state.kg || ''}">
+          <input type="number" inputmode="decimal" placeholder="${(prev && prev.kg) || unit}" value="${state.kg || ''}">
           <input type="number" inputmode="numeric" placeholder="${(prev && prev.reps) || 'reps'}" value="${state.reps || ''}">
           <button class="check-btn${state.done ? ' done' : ''}" aria-label="Marcar serie">${state.done ? '✓' : ''}</button>
         `;
@@ -1156,7 +1210,7 @@ function buildProgressCSV() {
         const entry = dayEntry[exName] || {};
         const push = (sets, lado) => (sets || []).forEach((set, i) => {
           if (!set || !set.done) return;
-          rows.push([dateISO, dayLabel, exName, i + 1, set.kg || '', set.reps || '', lado]);
+          rows.push([dateISO, dayLabel, exName, i + 1, toKg(set.kg, entry.unit), set.reps || '', lado]);
         });
         push(entry.sets, entry.setsI ? 'derecho' : '');
         push(entry.setsI, 'izquierdo');
