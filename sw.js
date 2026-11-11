@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gym-tracker-v7';
+const CACHE_NAME = 'gym-tracker-v8';
 const LOCAL_ASSETS = [
   './',
   './index.html',
@@ -25,6 +25,8 @@ self.addEventListener('activate', (event) => {
 // paralelo trae la versión nueva de la red para la siguiente apertura.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // solo archivos propios: las llamadas a la hoja de Google van directo a la red
+  if (new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
       cache.match(event.request).then((cached) => {

@@ -77,7 +77,6 @@
     font-weight: 700;
     display: flex; align-items: center; justify-content: center; gap: 6px;
   }
-  .section-btn .icon { font-size: 15px; }
   .section-btn.active {
     background: var(--gold);
     border-color: var(--gold);
@@ -157,7 +156,7 @@
 
   .set-row {
     display: grid;
-    grid-template-columns: 28px 1fr 1fr 40px;
+    grid-template-columns: 28px 1fr 1fr 44px;
     gap: 8px;
     align-items: center;
     margin-bottom: 8px;
@@ -171,8 +170,8 @@
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 8px;
-    padding: 9px 8px;
-    font-size: 14px;
+    padding: 11px 8px;
+    font-size: 16px;
     text-align: center;
   }
   .set-row input:focus { outline: none; border-color: var(--gold); }
@@ -186,7 +185,7 @@
     padding: 6px 10px; border-radius: 7px; font-size: 12px; font-weight: 700; color: var(--text-dim);
   }
   .unit-toggle span.on { background: var(--gold); color: #13151A; }
-  .set-row.uni { grid-template-columns: 34px 1fr 1fr 40px; }
+  .set-row.uni { grid-template-columns: 34px 1fr 1fr 44px; }
   .set-row.side-last { margin-bottom: 14px; }
 
   .week-banner {
@@ -213,7 +212,7 @@
   .block-info p { margin-top: 8px; }
 
   .check-btn {
-    width: 40px; height: 40px;
+    width: 44px; height: 44px;
     border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--bg-elev-2);
@@ -432,46 +431,108 @@
     padding: 10px 0 8px;
     display: flex; flex-direction: column; align-items: center; gap: 3px;
   }
-  nav.tabbar button .icon { font-size: 19px; }
   nav.tabbar button.active { color: var(--gold); }
-  nav.tabbar button.download-btn { color: var(--green); }
 
-  /* ---------- Rest timer overlay ---------- */
-  .timer-overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(10, 11, 14, 0.94);
+  /* ---------- Iconos ---------- */
+  .icon { display: inline-flex; }
+  .icon svg {
+    width: 20px; height: 20px; fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .section-btn .icon svg { width: 17px; height: 17px; }
+
+  /* ---------- Tarjeta de ejercicio: plegado, avisos, notas ---------- */
+  .exercise-card { scroll-margin-top: 84px; }
+  .exercise-head { cursor: pointer; }
+  .exercise-summary { display: none; font-size: 12.5px; color: var(--text-dim); margin-top: 4px; }
+  .exercise-summary::before { content: '✓ '; color: var(--ok); font-weight: 700; }
+  .exercise-card.collapsed .exercise-body,
+  .exercise-card.collapsed .unit-toggle { display: none; }
+  .exercise-card.collapsed .exercise-summary { display: block; }
+  .exercise-card.collapsed .exercise-meta { margin-bottom: 0; }
+  .exercise-sub { font-size: 11.5px; color: var(--text-dim); margin-bottom: 8px; }
+  .exercise-hint {
+    font-size: 12px; line-height: 1.4; margin-bottom: 10px; padding: 8px 10px;
+    border-radius: 6px; background: var(--bg-elev-2); color: var(--text);
+    border-left: 3px solid var(--border);
+  }
+  .exercise-hint.up { border-left-color: var(--gold); }
+  .exercise-hint b { display: block; font-size: 10.5px; letter-spacing: 0.4px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 2px; }
+  .exercise-hint.up b { color: var(--gold); }
+  .exercise-prev-note { font-size: 11.5px; color: var(--text-dim); margin: -6px 0 10px; font-style: italic; }
+  .exercise-actions { display: flex; gap: 16px; margin-top: 4px; }
+  .link-btn { background: none; border: none; padding: 8px 0; color: var(--text-dim); font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .exercise-user-note {
+    width: 100%; margin-top: 6px; background: var(--bg-elev-2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px; font-size: 16px; font-family: inherit; resize: vertical;
+  }
+  .exercise-user-note:focus { outline: none; border-color: var(--gold); }
+  .autosave-note { text-align: center; font-size: 12px; color: var(--text-dim); padding: 6px 0 10px; }
+
+  /* ---------- Resumen (tiles) ---------- */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .stat-tile { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; padding: 10px 8px; text-align: center; }
+  .stat-tile .v { font-size: 17px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .stat-tile .l { font-size: 10.5px; color: var(--text-dim); margin-top: 2px; }
+
+  /* ---------- Progreso ---------- */
+  .select-field {
+    width: 100%; background: var(--bg-elev); border: 1px solid var(--border); color: var(--text);
+    border-radius: 10px; padding: 12px; font-size: 16px; font-family: inherit; margin-bottom: 14px;
+  }
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .chart-sub { font-size: 11.5px; color: var(--text-dim); margin-bottom: 8px; min-height: 16px; }
+  .chart-svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+  .chart-svg text { fill: var(--text-dim); font-size: 10px; font-family: inherit; }
+  .session-row { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--text); line-height: 1.45; }
+  .session-row:last-child { border-bottom: none; }
+  .session-row .d { color: var(--text-dim); font-size: 11.5px; }
+  .session-row .n { color: var(--text-dim); font-style: italic; }
+
+  /* ---------- Datos ---------- */
+  .card p { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; margin-bottom: 10px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    flex: 1 1 auto; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg-elev-2); color: var(--text); font-size: 13.5px; font-weight: 700;
+  }
+  .btn.primary { background: var(--gold); border-color: var(--gold); color: #13151A; }
+  .btn.danger { color: #E08A82; }
+  .text-input, .code-area {
+    width: 100%; background: var(--bg-elev-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 11px; font-size: 16px; font-family: inherit; margin-bottom: 10px;
+  }
+  .code-area { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; resize: vertical; }
+  .sync-status { font-size: 12.5px; color: var(--text); margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; background: var(--bg-elev-2); }
+  .sync-status.err { border-left: 3px solid var(--danger); }
+  .card details { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin-top: 12px; }
+  .card details summary { color: var(--gold); font-weight: 700; }
+  .card details ol { padding-left: 18px; margin: 8px 0; }
+  .card details li { margin-bottom: 5px; }
+  .card details pre {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+    font-size: 10.5px; line-height: 1.4; overflow-x: auto; max-height: 200px; color: var(--text); margin: 8px 0;
+  }
+
+  /* ---------- Barra de descanso ---------- */
+  .timer-bar {
+    position: fixed; left: 0; right: 0; z-index: 30;
+    bottom: calc(58px + env(safe-area-inset-bottom));
+    background: var(--bg-elev-2); border-top: 1px solid var(--gold-dim);
     display: none;
-    align-items: center; justify-content: center;
-    flex-direction: column;
-    gap: 22px;
-    padding: 24px;
   }
-  .timer-overlay.show { display: flex; }
-  .timer-overlay .ex-name {
-    color: var(--text-dim); font-size: 13px; text-align: center;
+  .timer-bar.show { display: block; }
+  .timer-bar-track { height: 4px; background: var(--border); }
+  .timer-bar-fill { height: 100%; width: 100%; background: var(--gold); transform-origin: left; }
+  .timer-bar-row { display: flex; align-items: center; gap: 12px; padding: 8px 16px; max-width: 640px; margin: 0 auto; }
+  .timer-bar .time-text { font-size: 26px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .timer-bar .ex-name { flex: 1; min-width: 0; font-size: 11.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .timer-bar button {
+    padding: 10px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--bg-elev); color: var(--text); font-size: 13px; font-weight: 700;
   }
-  .timer-ring-wrap { position: relative; width: 220px; height: 220px; }
-  .timer-ring-wrap svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-  .timer-ring-wrap .time-text {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 44px; font-weight: 700; color: var(--gold);
-    font-variant-numeric: tabular-nums;
-  }
-  .timer-label { color: var(--text-dim); font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
-  .timer-actions { display: flex; gap: 12px; }
-  .timer-actions button {
-    padding: 12px 22px;
-    border-radius: 24px;
-    border: 1px solid var(--border);
-    background: var(--bg-elev);
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .timer-actions button.primary {
-    background: var(--gold); border-color: var(--gold); color: #13151A;
-  }
+  body.timer-on { padding-bottom: calc(124px + env(safe-area-inset-bottom)); }
+  body.timer-on .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
 
   ::-webkit-scrollbar { display: none; }
 </style>
@@ -484,8 +545,8 @@
 </header>
 
 <div class="section-switch">
-  <button class="section-btn active" data-section="gym"><span class="icon">🏋️</span>Gym</button>
-  <button class="section-btn" data-section="food"><span class="icon">🍽️</span>Comida</button>
+  <button class="section-btn active" data-section="gym"><span class="icon"><svg viewBox="0 0 24 24"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg></span>Gym</button>
+  <button class="section-btn" data-section="food"><span class="icon"><svg viewBox="0 0 24 24"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-3 4-3 7h3v11"/></svg></span>Comida</button>
 </div>
 
 <!-- ================= VISTA: RUTINA DEL DÍA ================= -->
@@ -506,7 +567,7 @@
 
   <div id="exercise-list"></div>
 
-  <button class="save-day-btn" id="save-day-btn">Guardar día</button>
+  <div class="autosave-note" id="autosave-note"></div>
 </section>
 
 <!-- ================= VISTA: SEMANA ================= -->
@@ -516,6 +577,7 @@
     <span id="week-nav-label"></span>
     <button id="week-next" aria-label="Semana siguiente">›</button>
   </div>
+  <div class="stat-row" id="week-summary"></div>
   <div id="week-list"></div>
   <details class="card block-info" id="block-info"></details>
 </section>
@@ -545,53 +607,112 @@
         <input type="date" id="food-range-to">
       </div>
     </div>
-    <button class="download-btn-inline" id="download-food-btn"><span class="icon">⬇️</span>Descargar CSV</button>
+    <button class="download-btn-inline" id="download-food-btn"><span class="icon"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></span>Descargar CSV</button>
   </div>
   <div id="food-history-list"></div>
 </section>
 
-<!-- ================= REST TIMER OVERLAY ================= -->
-<div class="timer-overlay" id="timer-overlay">
-  <div class="ex-name" id="timer-ex-name"></div>
-  <div class="timer-ring-wrap">
-    <svg viewBox="0 0 220 220">
-      <circle cx="110" cy="110" r="98" stroke="#2A2D36" stroke-width="10" fill="none"></circle>
-      <circle cx="110" cy="110" r="98" stroke="#C9A227" stroke-width="10" fill="none"
-        stroke-linecap="round" id="timer-ring" stroke-dasharray="615.75" stroke-dashoffset="0"></circle>
-    </svg>
-    <div class="time-text" id="timer-time">00:00</div>
+<!-- ================= VISTA: PROGRESO ================= -->
+<section class="view" id="view-progress" data-section="gym">
+  <div id="progress-view"></div>
+</section>
+
+<!-- ================= VISTA: DATOS ================= -->
+<section class="view" id="view-data" data-section="gym">
+  <div class="card">
+    <h2>Respaldo en Google Sheets</h2>
+    <div class="sync-status" id="sync-status"></div>
+    <div id="sync-choice" style="display:none;">
+      <p id="sync-choice-text"></p>
+      <div class="btn-row" style="margin-bottom:10px;">
+        <button class="btn primary" id="sync-choice-restore">Restaurar desde la hoja</button>
+        <button class="btn" id="sync-choice-keep">Usar los datos de este teléfono</button>
+      </div>
+    </div>
+    <input class="text-input" id="sync-url" type="url" inputmode="url" autocomplete="off" placeholder="Enlace de la aplicación web (https://script.google.com/…)">
+    <div class="btn-row">
+      <button class="btn primary" id="sync-connect">Conectar</button>
+      <button class="btn" id="sync-now">Respaldar ahora</button>
+      <button class="btn" id="sync-restore">Restaurar</button>
+      <button class="btn danger" id="sync-disconnect">Desconectar</button>
+    </div>
+    <details>
+      <summary>Cómo configurarlo (una sola vez)</summary>
+      <ol>
+        <li>En Google Sheets crea una hoja de cálculo nueva (por ejemplo "Gym Tracker").</li>
+        <li>Menú <b>Extensiones → Apps Script</b>. Borra lo que haya y pega el script de abajo.</li>
+        <li>Arriba a la derecha: <b>Implementar → Nueva implementación</b>. Tipo: <b>Aplicación web</b>.</li>
+        <li>"Ejecutar como": <b>Yo</b>. "Quién tiene acceso": <b>Cualquier persona</b>. Toca Implementar y acepta los permisos.</li>
+        <li>Copia la <b>URL de la aplicación web</b>, pégala arriba y toca Conectar.</li>
+      </ol>
+      <pre id="sync-script"></pre>
+      <button class="btn" id="sync-copy-script">Copiar script</button>
+      <p style="margin-top:10px;">El enlace funciona como contraseña de tu historial: no lo compartas.</p>
+    </details>
   </div>
-  <div class="timer-label">Descanso</div>
-  <div class="timer-actions">
+
+  <div class="card">
+    <h2>Archivo de respaldo</h2>
+    <p>Guarda todo (entrenamientos, comidas y rutina) en un archivo, o recupéralo desde uno.</p>
+    <div class="btn-row">
+      <button class="btn" id="backup-export">Exportar archivo</button>
+      <button class="btn" id="backup-import">Importar archivo</button>
+    </div>
+    <input type="file" id="backup-file" accept="application/json,.json" style="display:none;">
+  </div>
+
+  <div class="card">
+    <h2>Historial en CSV</h2>
+    <p>Todas las series completadas, con el peso siempre en kilos.</p>
+    <div class="btn-row"><button class="btn" id="download-progress-btn">Descargar progreso</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Rutina</h2>
+    <p id="routine-current"></p>
+    <textarea class="code-area" id="routine-json" rows="5" placeholder='Pega aquí el JSON del bloque nuevo: { "bloque": { "nombre": …, "dias": [ … ] } }'></textarea>
+    <div class="btn-row">
+      <button class="btn primary" id="routine-apply">Aplicar rutina</button>
+      <button class="btn" id="routine-reset">Volver a la rutina incluida</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BARRA DE DESCANSO ================= -->
+<div class="timer-bar" id="timer-bar" role="status">
+  <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-fill"></div></div>
+  <div class="timer-bar-row">
+    <div class="time-text" id="timer-time">00:00</div>
+    <div class="ex-name" id="timer-ex-name"></div>
+    <button id="timer-add">+15s</button>
     <button id="timer-skip">Saltar</button>
-    <button class="primary" id="timer-add">+15s</button>
   </div>
 </div>
 
 <nav class="tabbar" data-section="gym">
-  <button class="tab-btn active" data-view="view-day"><span class="icon">🏋️</span>Rutina</button>
-  <button class="tab-btn" data-view="view-week"><span class="icon">📅</span>Semana</button>
-  <button class="download-btn" id="download-progress-btn"><span class="icon">⬇️</span>Descargar progreso</button>
+  <button class="tab-btn active" data-view="view-day"><span class="icon"><svg viewBox="0 0 24 24"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg></span>Rutina</button>
+  <button class="tab-btn" data-view="view-week"><span class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>Semana</button>
+  <button class="tab-btn" data-view="view-progress"><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 20h16M5 15l4-5 4 3 6-8"/></svg></span>Progreso</button>
+  <button class="tab-btn" data-view="view-data"><span class="icon"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg></span>Datos</button>
 </nav>
 
 <nav class="tabbar" data-section="food" style="display:none;">
-  <button class="tab-btn" data-view="view-food-today"><span class="icon">🍽️</span>Hoy</button>
-  <button class="tab-btn" data-view="view-food-history"><span class="icon">📋</span>Historial</button>
+  <button class="tab-btn" data-view="view-food-today"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>Hoy</button>
+  <button class="tab-btn" data-view="view-food-history"><span class="icon"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></span>Historial</button>
 </nav>
 
 <script>
 /* ======================================================================
    ZONA DE RUTINA — EDITAR AQUÍ
-   Para cambiar de bloque de rutina, reemplaza por completo el objeto
-   ROUTINE de abajo (respetando la misma forma) y no toques nada más
-   en el archivo.
+   Rutina incluida en la app. Desde la pestaña Datos se puede pegar el JSON
+   de un bloque nuevo, que la reemplaza sin tocar este archivo.
 
    Forma de cada ejercicio:
    { nombre, sets: <num. de series>, repsLabel: <texto a mostrar, ej "6-8" o "10/pierna">,
      restSec: <segundos de descanso entre series>, uni: <true si se registra por lado>,
      nota: <texto técnico> }
    ====================================================================== */
-const ROUTINE = {
+const DEFAULT_ROUTINE = {
   bloque: {
     nombre: 'Bloque 5',
     version: 'v2 · ajustes del 11 nov 2026',
@@ -675,14 +796,19 @@ const DAY_LABELS = {
 /* ======================================================================
    ESTADO Y PERSISTENCIA (localStorage)
    ====================================================================== */
-// { "YYYY-MM-DD": { dayKey: { "<nombre del ejercicio>": { sets: [{kg,reps,done}], setsI?: [...] } } } }
+// { "YYYY-MM-DD": { dayKey: { "<nombre del ejercicio>": { sets: [{kg,reps,done}], setsI?: [...], unit?, nota? } } } }
 // En ejercicios unilaterales `sets` es el lado derecho y `setsI` el izquierdo.
 // El campo `kg` de cada serie guarda el número tal como se escribió, en la
 // unidad del ejercicio ese día (`unit`: 'kg' o 'lb'; sin `unit` = kg).
 const LS_PROGRESS = 'gym_progress';
-const LS_UNIT = 'gym_unit'; // última unidad elegida; se propone en los ejercicios aún sin registro
-const LB_TO_KG = 0.45359237;
 const LS_CURRENT_DAY = 'gym_current_day'; // "lunes" | "martes" | ...
+const LS_UNIT = 'gym_unit';       // última unidad elegida; se propone en los ejercicios aún sin registro
+const LS_ROUTINE = 'gym_routine'; // rutina pegada desde Datos; si no existe se usa DEFAULT_ROUTINE
+const LS_SUBS = 'gym_subs';       // { "YYYY-MM-DD": { dayKey: { "<ejercicio de la rutina>": "<sustituto>" } } }
+const LS_SYNC = 'gym_sync';       // { url, enabled, dirty, lastOk, lastError }
+const LB_TO_KG = 0.45359237;
+// Claves que forman el respaldo: cualquier cambio en ellas se manda a la hoja.
+const BACKED_UP_KEYS = [LS_PROGRESS, LS_ROUTINE, LS_SUBS, 'food_entries'];
 
 function loadJSON(key, fallback) {
   try {
@@ -692,11 +818,27 @@ function loadJSON(key, fallback) {
     return fallback;
   }
 }
+let syncState = loadJSON(LS_SYNC, {}) || {};
+let syncTimer = null;
+let syncChangeCount = 0;
+
 function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+  if (BACKED_UP_KEYS.includes(key)) markDirty();
+}
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
-let progressData = loadJSON(LS_PROGRESS, {});
+function isValidRoutine(r) {
+  return !!(r && Array.isArray(r.order) && r.order.length && r.dias
+    && r.order.every((k) => r.dias[k] && Array.isArray(r.dias[k].ejercicios)));
+}
+const storedRoutine = loadJSON(LS_ROUTINE, null);
+let ROUTINE = isValidRoutine(storedRoutine) ? storedRoutine : DEFAULT_ROUTINE;
+
+let progressData = loadJSON(LS_PROGRESS, {}) || {};
+let subsData = loadJSON(LS_SUBS, {}) || {};
 
 // Los registros de Bloque 4 se guardaron por posición ("0", "1", ...) en vez de
 // por nombre; se renombran una sola vez para que el CSV y "última vez" los lean.
@@ -707,9 +849,9 @@ const LEGACY_BLOQUE4 = {
   jueves: ['Sentadilla hack en máquina', 'Press en polea baja de pie cruzado', 'Curl de bíceps en polea baja con cuerda', 'Extensión de tríceps sobre cabeza con cuerda', 'Rueda abdominal', 'Pallof press en polea', 'Dead bug'],
   viernes: ['Press en máquina convergente', 'Remo en polea alta agarre supino', 'Zancada estática con mancuernas', 'Elevaciones laterales en cable', 'Pallof press en polea', 'Caminata inclinada'],
 };
-(function migrateLegacyKeys() {
+function migrateLegacyKeys(data) {
   let changed = false;
-  Object.values(progressData).forEach((days) => {
+  Object.values(data).forEach((days) => {
     Object.keys(days || {}).forEach((dayKey) => {
       const dayEntry = days[dayKey] || {};
       Object.keys(dayEntry).forEach((key) => {
@@ -722,21 +864,27 @@ const LEGACY_BLOQUE4 = {
       });
     });
   });
-  if (changed) saveJSON(LS_PROGRESS, progressData);
-})();
+  return changed;
+}
+if (migrateLegacyKeys(progressData)) saveJSON(LS_PROGRESS, progressData);
 
 /* ======================================================================
    UTILIDADES DE FECHA
    ====================================================================== */
+const DAY_INDEX = { lunes: 0, martes: 1, miercoles: 2, jueves: 3, viernes: 4, sabado: 5, domingo: 6 };
+
 function todayISO() {
-  const d = new Date();
-  return isoFromDate(d);
+  return isoFromDate(new Date());
 }
 function isoFromDate(d) {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+function dateFromISO(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }
 function ddmmFromISO(iso) {
   const [y, m, d] = iso.split('-');
@@ -757,10 +905,10 @@ function mondayOfWeek(d) {
 /* ======================================================================
    ESTADO DE NAVEGACIÓN
    ====================================================================== */
-// Al abrir la app se muestra el día de hoy; en fin de semana, el último visto.
+// Al abrir la app se muestra el día de hoy; si hoy no hay rutina, el último visto.
 let currentDay = weekdayKeyForDate(new Date());
 if (!ROUTINE.dias[currentDay]) currentDay = loadJSON(LS_CURRENT_DAY, null);
-if (!ROUTINE.dias[currentDay]) currentDay = 'lunes';
+if (!ROUTINE.dias[currentDay]) currentDay = ROUTINE.order[0];
 
 let weekOffset = 0; // 0 = semana en curso, -1 = la anterior, ...
 
@@ -773,12 +921,12 @@ function logDateForDay(dayKey) {
   // cada chip de día corresponde a la fecha de esa jornada en la semana que se
   // está viendo, no a la fecha de hoy, para poder ver/editar un día ya realizado
   const date = viewedMonday();
-  date.setDate(date.getDate() + ROUTINE.order.indexOf(dayKey));
+  date.setDate(date.getDate() + DAY_INDEX[dayKey]);
   return isoFromDate(date);
 }
 
 /* ======================================================================
-   ACCESO A PROGRESO DEL DÍA ACTUAL
+   ACCESO A PROGRESO
    ====================================================================== */
 function getDayEntry(dateISO, dayKey, create) {
   if (!progressData[dateISO]) {
@@ -791,35 +939,36 @@ function getDayEntry(dateISO, dayKey, create) {
   }
   return progressData[dateISO][dayKey];
 }
+let defaultUnit = loadJSON(LS_UNIT, 'kg') === 'lb' ? 'lb' : 'kg';
+function getEntry(dateISO, dayKey, exKey, create) {
+  const dayEntry = getDayEntry(dateISO, dayKey, create);
+  if (!dayEntry) return null;
+  if (!dayEntry[exKey] && create) dayEntry[exKey] = { sets: [], unit: defaultUnit };
+  return dayEntry[exKey] || null;
+}
+
 const SIDES = [{ field: 'sets', tag: 'D' }, { field: 'setsI', tag: 'I' }];
 function sidesFor(ex) {
   return ex.uni ? SIDES : [SIDES[0]];
 }
 function getSetState(dateISO, dayKey, exKey, setIndex, field = 'sets') {
-  const dayEntry = getDayEntry(dateISO, dayKey, false);
-  const ex = dayEntry && dayEntry[exKey];
-  const set = ex && ex[field] && ex[field][setIndex];
+  const entry = getEntry(dateISO, dayKey, exKey, false);
+  const set = entry && entry[field] && entry[field][setIndex];
   return set || { kg: '', reps: '', done: false };
 }
 function setSetState(dateISO, dayKey, exKey, setIndex, patch, field = 'sets') {
-  const dayEntry = getDayEntry(dateISO, dayKey, true);
-  if (!dayEntry[exKey]) dayEntry[exKey] = { sets: [], unit: defaultUnit };
-  const entry = dayEntry[exKey];
+  const entry = getEntry(dateISO, dayKey, exKey, true);
   if (!entry[field]) entry[field] = [];
   if (!entry[field][setIndex]) entry[field][setIndex] = { kg: '', reps: '', done: false };
   Object.assign(entry[field][setIndex], patch);
   saveJSON(LS_PROGRESS, progressData);
 }
-let defaultUnit = loadJSON(LS_UNIT, 'kg') === 'lb' ? 'lb' : 'kg';
 function getUnit(dateISO, dayKey, exKey) {
-  const dayEntry = getDayEntry(dateISO, dayKey, false);
-  const entry = dayEntry && dayEntry[exKey];
+  const entry = getEntry(dateISO, dayKey, exKey, false);
   return entry ? (entry.unit || 'kg') : defaultUnit;
 }
 function setUnit(dateISO, dayKey, exKey, unit) {
-  const dayEntry = getDayEntry(dateISO, dayKey, true);
-  if (!dayEntry[exKey]) dayEntry[exKey] = { sets: [] };
-  dayEntry[exKey].unit = unit;
+  getEntry(dateISO, dayKey, exKey, true).unit = unit;
   defaultUnit = unit;
   saveJSON(LS_UNIT, unit);
   saveJSON(LS_PROGRESS, progressData);
@@ -835,41 +984,121 @@ function convertWeight(value, from, to) {
   if (isNaN(n) || from === to) return value;
   return String(to === 'kg' ? Math.round(n * LB_TO_KG * 2) / 2 : Math.round(n / LB_TO_KG));
 }
+function fmtNum(n) {
+  return String(Math.round(n * 10) / 10);
+}
+
+// Ejercicios de un día con las sustituciones de esa fecha aplicadas.
+function dayExercises(dateISO, dayKey) {
+  const subs = (subsData[dateISO] || {})[dayKey] || {};
+  return ROUTINE.dias[dayKey].ejercicios.map((ex) =>
+    (subs[ex.nombre] ? { ...ex, nombre: subs[ex.nombre], original: ex.nombre } : ex));
+}
+function setSubstitution(dateISO, dayKey, originalName, replacement) {
+  if (!subsData[dateISO]) subsData[dateISO] = {};
+  if (!subsData[dateISO][dayKey]) subsData[dateISO][dayKey] = {};
+  if (replacement) subsData[dateISO][dayKey][originalName] = replacement;
+  else delete subsData[dateISO][dayKey][originalName];
+  saveJSON(LS_SUBS, subsData);
+}
+
 // Una serie unilateral cuenta como hecha cuando están marcados ambos lados.
 function isSeriesDone(dateISO, dayKey, ex, setIndex) {
   return sidesFor(ex).every((sd) => getSetState(dateISO, dayKey, ex.nombre, setIndex, sd.field).done);
 }
+function isExerciseDone(dateISO, dayKey, ex) {
+  for (let s = 0; s < ex.sets; s++) if (!isSeriesDone(dateISO, dayKey, ex, s)) return false;
+  return true;
+}
+function doneSets(sets) {
+  return (sets || []).filter((s) => s && s.done);
+}
 function doneSetsText(sets, unit) {
-  return (sets || [])
-    .filter((s) => s && s.done)
+  return doneSets(sets)
     .map((s) => (s.kg ? `${s.kg}${unit}×${s.reps || '?'}` : `${s.reps || '?'}`))
     .join(' · ');
 }
+function entryHasDone(entry) {
+  return !!entry && (doneSets(entry.sets).length > 0 || doneSets(entry.setsI).length > 0);
+}
+function entryText(entry) {
+  const unit = entry.unit || 'kg';
+  const right = doneSetsText(entry.sets, unit);
+  const left = doneSetsText(entry.setsI, unit);
+  return left ? `D: ${right || '—'} / I: ${left}` : right;
+}
+// Peso más alto de la sesión, en kilos (null si el ejercicio se hizo sin peso).
+function entryTopKg(entry) {
+  const unit = entry.unit || 'kg';
+  const weights = doneSets(entry.sets).concat(doneSets(entry.setsI))
+    .map((s) => toKg(s.kg, unit)).filter((w) => w !== '');
+  return weights.length ? Math.max(...weights) : null;
+}
+function entryTopReps(entry) {
+  const reps = doneSets(entry.sets).concat(doneSets(entry.setsI))
+    .map((s) => parseFloat(s.reps)).filter((r) => !isNaN(r));
+  return reps.length ? Math.max(...reps) : null;
+}
 
-// Busca la sesión anterior más reciente (en cualquier día) donde este
-// ejercicio -identificado por nombre, no por posición- tenga series
-// marcadas como completadas. Así sobrevive a cambios de bloque de rutina.
-function findLastTime(exName, logDate) {
-  const dates = Object.keys(progressData)
-    .filter((d) => d !== logDate && d < logDate)
-    .sort()
-    .reverse();
-  for (const d of dates) {
+// Sesiones de un ejercicio -identificado por nombre, no por posición ni por día-
+// con al menos una serie completada, de la más antigua a la más reciente.
+function sessionsOf(exName) {
+  const out = [];
+  Object.keys(progressData).sort().forEach((d) => {
     const dayEntries = progressData[d] || {};
-    for (const dk of Object.keys(dayEntries)) {
+    Object.keys(dayEntries).forEach((dk) => {
       const entry = dayEntries[dk] && dayEntries[dk][exName];
-      if (!entry) continue;
-      const unit = entry.unit || 'kg';
-      const right = doneSetsText(entry.sets, unit);
-      const left = doneSetsText(entry.setsI, unit);
-      if (!right && !left) continue;
-      const html = left
-        ? `<br>D: <strong>${right || '—'}</strong><br>I: <strong>${left}</strong>`
-        : ` <strong>${right}</strong>`;
-      return { date: d, entry, unit, html };
+      if (entryHasDone(entry)) out.push({ date: d, entry });
+    });
+  });
+  return out;
+}
+function sessionsBefore(exName, beforeISO) {
+  return sessionsOf(exName).filter((s) => s.date < beforeISO).reverse();
+}
+
+/* ======================================================================
+   AVISO DE PROGRESIÓN (doble progresión)
+   ====================================================================== */
+// Tope del rango de reps: "10-12" -> 12, "8/pierna" -> 8. Sin tope para tiempos.
+function repTarget(ex) {
+  const label = String(ex.repsLabel);
+  if (/min|seg/i.test(label)) return null;
+  const nums = label.split('/')[0].match(/\d+/g);
+  return nums ? Number(nums[nums.length - 1]) : null;
+}
+// Sesión limpia: todas las series prescritas hechas y en el tope de reps.
+function isCleanSession(entry, ex, top) {
+  const fields = ex.uni && entry.setsI ? ['sets', 'setsI'] : ['sets'];
+  return fields.every((field) => {
+    for (let s = 0; s < ex.sets; s++) {
+      const set = (entry[field] || [])[s];
+      if (!set || !set.done || !(parseFloat(set.reps) >= top)) return false;
     }
+    return true;
+  });
+}
+function progressionHint(ex, sessions, unit) {
+  const top = repTarget(ex);
+  if (!top || !sessions.length) return null;
+  const [last, prev] = sessions;
+  if (!isCleanSession(last.entry, ex, top)) {
+    return { up: false, text: `Mantén la carga y suma reps hasta llegar a ${top} en todas las series.` };
   }
-  return null;
+  const wLast = entryTopKg(last.entry);
+  const wPrev = prev ? entryTopKg(prev.entry) : null;
+  const sameLoad = prev && (wLast === null ? wPrev === null : (wPrev !== null && Math.abs(wLast - wPrev) <= wLast * 0.01));
+  if (!prev || !sameLoad || !isCleanSession(prev.entry, ex, top)) {
+    return { up: false, text: `Tope de reps logrado en 1 de 2 sesiones. Repite la carga para confirmar.` };
+  }
+  if (wLast === null) {
+    return { up: true, text: 'Dos sesiones seguidas en el tope de reps: toca subir la dificultad.' };
+  }
+  const inUnit = (kg) => fmtNum(unit === 'lb' ? kg / LB_TO_KG : kg);
+  return {
+    up: true,
+    text: `Dos sesiones seguidas en el tope de reps: toca subir carga 2-5% (de ${inUnit(wLast)} a ${inUnit(wLast * 1.02)}–${inUnit(wLast * 1.05)} ${unit}).`,
+  };
 }
 
 /* ======================================================================
@@ -880,6 +1109,7 @@ const exerciseListEl = document.getElementById('exercise-list');
 const progressFillEl = document.getElementById('progress-fill');
 const progressTextEl = document.getElementById('progress-text');
 const progressPctEl = document.getElementById('progress-pct');
+const collapsedState = {}; // "<fecha>|<ejercicio>" -> true/false (solo en memoria)
 
 function renderDayChips() {
   dayChipsEl.innerHTML = '';
@@ -897,9 +1127,8 @@ function renderDayChips() {
 }
 
 function computeDayProgress(dateISO, dayKey) {
-  const dia = ROUTINE.dias[dayKey];
   let total = 0, done = 0;
-  dia.ejercicios.forEach((ex) => {
+  dayExercises(dateISO, dayKey).forEach((ex) => {
     for (let s = 0; s < ex.sets; s++) {
       total++;
       if (isSeriesDone(dateISO, dayKey, ex, s)) done++;
@@ -932,34 +1161,103 @@ function renderExerciseList() {
   banner.style.display = weekOffset ? 'flex' : 'none';
   document.getElementById('week-banner-text').textContent = `Semana del ${ddmmFromISO(isoFromDate(viewedMonday()))}`;
 
-  dia.ejercicios.forEach((ex) => {
+  const exercises = dayExercises(logDate, currentDay);
+  exercises.forEach((ex) => {
     const card = document.createElement('div');
     card.className = 'exercise-card';
 
-    const last = findLastTime(ex.nombre, logDate);
-    const noteHtml = ex.nota ? `<div class="exercise-note">${ex.nota}</div>` : '';
-    const restHtml = ex.restSec ? ` · descanso ${restLabel(ex.restSec)}` : '';
-
+    const sessions = sessionsBefore(ex.nombre, logDate);
+    const last = sessions[0] || null;
+    const lastUnit = last ? (last.entry.unit || 'kg') : 'kg';
     const unit = getUnit(logDate, currentDay, ex.nombre);
+    const hint = progressionHint(ex, sessions, unit);
+    const entryNow = getEntry(logDate, currentDay, ex.nombre, false);
+
+    const collapseKey = `${logDate}|${ex.nombre}`;
+    if (!(collapseKey in collapsedState)) collapsedState[collapseKey] = isExerciseDone(logDate, currentDay, ex);
+    card.classList.toggle('collapsed', collapsedState[collapseKey]);
+
+    let lastHtml = 'Sin registro previo';
+    if (last) {
+      const right = doneSetsText(last.entry.sets, lastUnit);
+      const left = doneSetsText(last.entry.setsI, lastUnit);
+      lastHtml = `Última vez ${ddmmFromISO(last.date)}:` + (left
+        ? `<br>D: <strong>${esc(right || '—')}</strong><br>I: <strong>${esc(left)}</strong>`
+        : ` <strong>${esc(right)}</strong>`);
+    }
 
     card.innerHTML = `
       <div class="exercise-head">
         <div>
-          <div class="exercise-title">${ex.nombre}</div>
-          <div class="exercise-meta">${ex.sets}×${ex.repsLabel}${restHtml}</div>
+          <div class="exercise-title">${esc(ex.nombre)}</div>
+          <div class="exercise-meta">${ex.sets}×${esc(ex.repsLabel)}${ex.restSec ? ` · descanso ${restLabel(ex.restSec)}` : ''}</div>
+          <div class="exercise-summary"></div>
         </div>
         <button class="unit-toggle" aria-label="Cambiar entre kilos y libras">
           <span class="${unit === 'kg' ? 'on' : ''}">kg</span><span class="${unit === 'lb' ? 'on' : ''}">lb</span>
         </button>
       </div>
-      ${noteHtml}
-      <div class="exercise-last">${last ? `Última vez ${ddmmFromISO(last.date)}:${last.html}` : 'Sin registro previo'}</div>
-      <div class="sets-container"></div>
+      <div class="exercise-body">
+        ${ex.original ? `<div class="exercise-sub">Hoy sustituye a: ${esc(ex.original)}</div>` : ''}
+        ${ex.nota ? `<div class="exercise-note">${esc(ex.nota)}</div>` : ''}
+        <div class="exercise-last">${lastHtml}</div>
+        ${last && last.entry.nota ? `<div class="exercise-prev-note">Nota anterior: ${esc(last.entry.nota)}</div>` : ''}
+        ${hint ? `<div class="exercise-hint${hint.up ? ' up' : ''}"><b>${hint.up ? 'Sube carga' : 'Progresión'}</b>${esc(hint.text)}</div>` : ''}
+        <div class="sets-container"></div>
+        <div class="exercise-actions">
+          <button class="link-btn note-btn">Nota</button>
+          <button class="link-btn sub-btn">${ex.original ? 'Quitar sustitución' : 'Sustituir hoy'}</button>
+        </div>
+        <textarea class="exercise-user-note" rows="2" placeholder="Nota de esta sesión" style="display:none;"></textarea>
+      </div>
     `;
 
-    card.querySelector('.unit-toggle').addEventListener('click', () => {
+    const summaryEl = card.querySelector('.exercise-summary');
+    const updateSummary = () => {
+      const entry = getEntry(logDate, currentDay, ex.nombre, false);
+      summaryEl.textContent = entry ? entryText(entry) : '';
+    };
+    updateSummary();
+
+    card.querySelector('.exercise-head').addEventListener('click', () => {
+      collapsedState[collapseKey] = !collapsedState[collapseKey];
+      card.classList.toggle('collapsed', collapsedState[collapseKey]);
+      updateSummary();
+    });
+    card.querySelector('.unit-toggle').addEventListener('click', (ev) => {
+      ev.stopPropagation();
       setUnit(logDate, currentDay, ex.nombre, unit === 'kg' ? 'lb' : 'kg');
       renderExerciseList();
+    });
+
+    const noteEl = card.querySelector('.exercise-user-note');
+    if (entryNow && entryNow.nota) {
+      noteEl.value = entryNow.nota;
+      noteEl.style.display = 'block';
+    }
+    card.querySelector('.note-btn').addEventListener('click', () => {
+      noteEl.style.display = 'block';
+      noteEl.focus();
+    });
+    noteEl.addEventListener('input', () => {
+      getEntry(logDate, currentDay, ex.nombre, true).nota = noteEl.value;
+      saveJSON(LS_PROGRESS, progressData);
+    });
+
+    card.querySelector('.sub-btn').addEventListener('click', () => {
+      const routineName = ex.original || ex.nombre;
+      if (ex.original) {
+        setSubstitution(logDate, currentDay, routineName, null);
+      } else {
+        const name = (window.prompt(`Sustituir "${ex.nombre}" solo este día por:`) || '').trim();
+        if (!name) return;
+        if (exercises.some((other) => other.nombre === name)) {
+          showToast('Ese ejercicio ya está en este día');
+          return;
+        }
+        setSubstitution(logDate, currentDay, routineName, name);
+      }
+      renderDayView();
     });
 
     const setsContainer = card.querySelector('.sets-container');
@@ -970,14 +1268,14 @@ function renderExerciseList() {
         // valores de la sesión anterior: se muestran como guía y se usan al marcar ✓ sin escribir nada
         const prevSets = last && (last.entry[side.field] || last.entry.sets);
         const prevSet = (prevSets && prevSets[s] && prevSets[s].done) ? prevSets[s] : null;
-        const prev = prevSet && { kg: convertWeight(prevSet.kg, last.unit, unit), reps: prevSet.reps };
+        const prev = prevSet && { kg: convertWeight(prevSet.kg, lastUnit, unit), reps: prevSet.reps };
 
         const row = document.createElement('div');
         row.className = 'set-row' + (ex.uni ? ' uni' : '') + (ex.uni && sideIdx === sides.length - 1 ? ' side-last' : '');
         row.innerHTML = `
           <div class="set-num">${s + 1}${ex.uni ? ' ' + side.tag : ''}</div>
-          <input type="number" inputmode="decimal" placeholder="${(prev && prev.kg) || unit}" value="${state.kg || ''}">
-          <input type="number" inputmode="numeric" placeholder="${(prev && prev.reps) || 'reps'}" value="${state.reps || ''}">
+          <input type="number" inputmode="decimal" placeholder="${esc((prev && prev.kg) || unit)}" value="${esc(state.kg || '')}">
+          <input type="number" inputmode="numeric" placeholder="${esc((prev && prev.reps) || 'reps')}" value="${esc(state.reps || '')}">
           <button class="check-btn${state.done ? ' done' : ''}" aria-label="Marcar serie">${state.done ? '✓' : ''}</button>
         `;
         const [kgInput, repsInput] = row.querySelectorAll('input');
@@ -996,12 +1294,28 @@ function renderExerciseList() {
             if (!kgInput.value && prev.kg) { kgInput.value = prev.kg; patch.kg = prev.kg; }
             if (!repsInput.value && prev.reps) { repsInput.value = prev.reps; patch.reps = prev.reps; }
           }
+          const todayTopBefore = entryTopKg(getEntry(logDate, currentDay, ex.nombre, false) || {});
           setSetState(logDate, currentDay, ex.nombre, s, patch, side.field);
           checkBtn.classList.toggle('done', willBeDone);
           checkBtn.textContent = willBeDone ? '✓' : '';
           renderProgressBar();
-          if (willBeDone && ex.restSec > 0 && isSeriesDone(logDate, currentDay, ex, s)) {
+          if (!willBeDone) return;
+
+          // récord: supera todo lo anterior y lo ya marcado hoy
+          const weight = toKg(kgInput.value, unit);
+          const pastTop = sessions.reduce((max, ses) => Math.max(max, entryTopKg(ses.entry) || 0), 0);
+          if (weight !== '' && pastTop > 0 && weight > pastTop && weight > (todayTopBefore || 0)) {
+            showToast(`Nuevo récord: ${kgInput.value} ${unit}`);
+          }
+          if (ex.restSec > 0 && isSeriesDone(logDate, currentDay, ex, s)) {
             startRestTimer(ex.restSec, ex.nombre);
+          }
+          if (isExerciseDone(logDate, currentDay, ex)) {
+            collapsedState[collapseKey] = true;
+            card.classList.add('collapsed');
+            updateSummary();
+            const next = card.nextElementSibling;
+            if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
         });
 
@@ -1024,17 +1338,12 @@ function renderDayView() {
   renderProgressBar();
 }
 
-document.getElementById('save-day-btn').addEventListener('click', () => {
-  saveJSON(LS_PROGRESS, progressData);
-  showToast('Día guardado');
-});
-
 function showToast(msg) {
   const el = document.getElementById('toast') || createToastEl();
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => el.classList.remove('show'), 1800);
+  showToast._t = setTimeout(() => el.classList.remove('show'), 2200);
 }
 function createToastEl() {
   const el = document.createElement('div');
@@ -1045,22 +1354,22 @@ function createToastEl() {
 }
 
 /* ======================================================================
-   TEMPORIZADOR DE DESCANSO
+   BARRA DE DESCANSO
+   No tapa la pantalla: se puede seguir escribiendo mientras corre.
    ====================================================================== */
-const timerOverlay = document.getElementById('timer-overlay');
-const timerRing = document.getElementById('timer-ring');
+const timerBar = document.getElementById('timer-bar');
+const timerFill = document.getElementById('timer-fill');
 const timerTimeEl = document.getElementById('timer-time');
 const timerExNameEl = document.getElementById('timer-ex-name');
-const RING_CIRCUMFERENCE = 2 * Math.PI * 98;
-timerRing.setAttribute('stroke-dasharray', RING_CIRCUMFERENCE.toFixed(2));
 
 let timerState = null; // { totalSec, endsAt, rafId }
 
 function startRestTimer(seconds, exName) {
   clearTimerLoop();
-  timerExNameEl.textContent = exName;
+  timerExNameEl.textContent = `Descanso · ${exName}`;
   timerState = { totalSec: seconds, endsAt: Date.now() + seconds * 1000 };
-  timerOverlay.classList.add('show');
+  timerBar.classList.add('show');
+  document.body.classList.add('timer-on');
   tickTimer();
 }
 
@@ -1071,10 +1380,8 @@ function tickTimer() {
   const mm = String(Math.floor(remainingSec / 60)).padStart(2, '0');
   const ss = String(remainingSec % 60).padStart(2, '0');
   timerTimeEl.textContent = `${mm}:${ss}`;
-
-  const elapsedFrac = 1 - Math.max(0, remainingMs) / (timerState.totalSec * 1000);
-  const offset = RING_CIRCUMFERENCE * Math.min(1, Math.max(0, elapsedFrac));
-  timerRing.setAttribute('stroke-dashoffset', offset.toFixed(2));
+  const remainingFrac = Math.min(1, Math.max(0, remainingMs / (timerState.totalSec * 1000)));
+  timerFill.style.transform = `scaleX(${remainingFrac.toFixed(4)})`;
 
   if (remainingMs <= 0) {
     finishRestTimer();
@@ -1087,10 +1394,10 @@ function finishRestTimer() {
   playBeep();
   if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300]);
   timerTimeEl.textContent = '00:00';
-  timerRing.setAttribute('stroke-dashoffset', RING_CIRCUMFERENCE.toFixed(2));
+  const finished = timerState;
   setTimeout(() => {
-    if (timerState) closeTimer();
-  }, 1200);
+    if (timerState === finished) closeTimer();
+  }, 1500);
 }
 
 function clearTimerLoop() {
@@ -1100,7 +1407,8 @@ function clearTimerLoop() {
 function closeTimer() {
   clearTimerLoop();
   timerState = null;
-  timerOverlay.classList.remove('show');
+  timerBar.classList.remove('show');
+  document.body.classList.remove('timer-on');
 }
 
 document.getElementById('timer-skip').addEventListener('click', closeTimer);
@@ -1143,6 +1451,40 @@ function openDay(dayKey) {
   document.querySelector('.tab-btn[data-view="view-day"]').click();
 }
 
+// Series completadas y volumen (kg × reps) de los 7 días que empiezan en `monday`.
+function weekTotals(monday) {
+  let sets = 0, volume = 0;
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + i);
+    const dayEntries = progressData[isoFromDate(date)] || {};
+    Object.values(dayEntries).forEach((dayEntry) => {
+      Object.values(dayEntry || {}).forEach((entry) => {
+        if (!entry) return;
+        doneSets(entry.sets).concat(doneSets(entry.setsI)).forEach((set) => {
+          sets++;
+          const kg = toKg(set.kg, entry.unit);
+          const reps = parseFloat(set.reps);
+          if (kg !== '' && !isNaN(reps)) volume += kg * reps;
+        });
+      });
+    });
+  }
+  return { sets, volume };
+}
+// Semanas seguidas con al menos una serie; la semana en curso aún vacía no rompe la racha.
+function weekStreak() {
+  const monday = mondayOfWeek(new Date());
+  let streak = 0;
+  for (let i = 0; i < 520; i++) {
+    const has = weekTotals(monday).sets > 0;
+    if (has) streak++;
+    else if (i > 0) break;
+    monday.setDate(monday.getDate() - 7);
+  }
+  return streak;
+}
+
 function renderWeekView() {
   weekListEl.innerHTML = '';
   const monday = viewedMonday();
@@ -1151,10 +1493,14 @@ function renderWeekView() {
     weekOffset ? `Semana del ${ddmmFromISO(isoFromDate(monday))}` : 'Esta semana';
   document.getElementById('week-next').disabled = weekOffset >= 0;
 
+  let daysDone = 0, seriesDone = 0, seriesTotal = 0;
   ROUTINE.order.forEach((dayKey) => {
     const dateISO = logDateForDay(dayKey);
     const { total, done } = computeDayProgress(dateISO, dayKey);
     const pct = total ? Math.round((done / total) * 100) : 0;
+    if (done > 0) daysDone++;
+    seriesDone += done;
+    seriesTotal += total;
 
     const card = document.createElement('div');
     card.className = 'week-card' + (dateISO === today ? ' today' : '');
@@ -1163,7 +1509,7 @@ function renderWeekView() {
     card.innerHTML = `
       <div class="info">
         <div class="day-name">${DAY_LABELS[dayKey]}${dateISO === today ? ' · hoy' : ''}</div>
-        <div class="day-focus">${ROUTINE.dias[dayKey].nombre} · ${ddmmFromISO(dateISO)}</div>
+        <div class="day-focus">${esc(ROUTINE.dias[dayKey].nombre)} · ${ddmmFromISO(dateISO)}</div>
       </div>
       <div class="week-ring">
         <svg viewBox="0 0 46 46">
@@ -1178,12 +1524,21 @@ function renderWeekView() {
     weekListEl.appendChild(card);
   });
 
-  const b = ROUTINE.bloque;
+  const totals = weekTotals(monday);
+  const streak = weekStreak();
+  document.getElementById('week-summary').innerHTML = `
+    <div class="stat-tile"><div class="v">${daysDone}/${ROUTINE.order.length}</div><div class="l">días</div></div>
+    <div class="stat-tile"><div class="v">${seriesDone}/${seriesTotal}</div><div class="l">series</div></div>
+    <div class="stat-tile"><div class="v">${Math.round(totals.volume).toLocaleString('es-MX')}</div><div class="l">kg de volumen</div></div>
+    <div class="stat-tile"><div class="v">${streak}</div><div class="l">${streak === 1 ? 'semana seguida' : 'semanas seguidas'}</div></div>
+  `;
+
+  const b = ROUTINE.bloque || {};
   document.getElementById('block-info').innerHTML = `
-    <summary>${b.nombre} · reglas del bloque</summary>
-    <p>${b.version}</p>
-    <p>${b.objetivo}</p>
-    <ul>${b.reglas.map((r) => `<li>${r}</li>`).join('')}</ul>
+    <summary>${esc(b.nombre || 'Rutina')} · reglas del bloque</summary>
+    ${b.version ? `<p>${esc(b.version)}</p>` : ''}
+    ${b.objetivo ? `<p>${esc(b.objetivo)}</p>` : ''}
+    <ul>${(b.reglas || []).map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
   `;
 }
 
@@ -1191,33 +1546,207 @@ document.getElementById('week-prev').addEventListener('click', () => { weekOffse
 document.getElementById('week-next').addEventListener('click', () => { if (weekOffset < 0) weekOffset++; renderWeekView(); });
 
 /* ======================================================================
+   RENDER: VISTA PROGRESO (gráfica y récords por ejercicio)
+   ====================================================================== */
+let progressExercise = null;
+
+function exercisesWithHistory() {
+  const seen = new Set();
+  Object.values(progressData).forEach((days) => {
+    Object.values(days || {}).forEach((dayEntry) => {
+      Object.keys(dayEntry || {}).forEach((name) => {
+        if (entryHasDone(dayEntry[name])) seen.add(name);
+      });
+    });
+  });
+  const inRoutine = [];
+  ROUTINE.order.forEach((dk) => ROUTINE.dias[dk].ejercicios.forEach((ex) => {
+    if (seen.has(ex.nombre) && !inRoutine.includes(ex.nombre)) inRoutine.push(ex.nombre);
+  }));
+  const others = [...seen].filter((n) => !inRoutine.includes(n)).sort((a, b) => a.localeCompare(b, 'es'));
+  return { inRoutine, others };
+}
+
+function renderProgressView() {
+  const root = document.getElementById('progress-view');
+  const { inRoutine, others } = exercisesWithHistory();
+  const all = inRoutine.concat(others);
+  if (!all.length) {
+    root.innerHTML = '<div class="meal-empty">Aún no hay series completadas. Cuando registres entrenamientos aquí verás tu progreso por ejercicio.</div>';
+    return;
+  }
+  if (!all.includes(progressExercise)) progressExercise = all[0];
+
+  const option = (n) => `<option value="${esc(n)}"${n === progressExercise ? ' selected' : ''}>${esc(n)}</option>`;
+  root.innerHTML = `
+    <select class="select-field" id="progress-select" aria-label="Ejercicio">
+      ${inRoutine.length ? `<optgroup label="Rutina actual">${inRoutine.map(option).join('')}</optgroup>` : ''}
+      ${others.length ? `<optgroup label="Otros / bloques anteriores">${others.map(option).join('')}</optgroup>` : ''}
+    </select>
+    <div class="stat-row" id="progress-tiles"></div>
+    <div class="card">
+      <div class="chart-title" id="chart-title"></div>
+      <div class="chart-sub" id="chart-sub"></div>
+      <div id="chart-wrap"></div>
+    </div>
+    <div class="card"><h2>Sesiones</h2><div id="session-list"></div></div>
+  `;
+  root.querySelector('#progress-select').addEventListener('change', (ev) => {
+    progressExercise = ev.target.value;
+    renderProgressView();
+  });
+
+  const sessions = sessionsOf(progressExercise);
+  const withWeight = sessions.some((s) => entryTopKg(s.entry) !== null);
+  const points = sessions
+    .map((s) => ({ date: s.date, entry: s.entry, value: withWeight ? entryTopKg(s.entry) : entryTopReps(s.entry) }))
+    .filter((p) => p.value !== null);
+  const measure = withWeight ? 'kg' : 'reps';
+
+  const best = points.reduce((max, p) => Math.max(max, p.value), 0);
+  const bestPoint = points.find((p) => p.value === best);
+  let secondTile = '';
+  if (withWeight && bestPoint) {
+    const unit = bestPoint.entry.unit || 'kg';
+    const repsAtBest = doneSets(bestPoint.entry.sets).concat(doneSets(bestPoint.entry.setsI))
+      .filter((set) => toKg(set.kg, unit) === best)
+      .map((set) => parseFloat(set.reps)).filter((r) => !isNaN(r));
+    secondTile = `<div class="stat-tile"><div class="v">${repsAtBest.length ? Math.max(...repsAtBest) : '—'}</div><div class="l">reps con ese peso</div></div>`;
+  }
+  root.querySelector('#progress-tiles').innerHTML = `
+    <div class="stat-tile"><div class="v">${points.length ? fmtNum(best) : '—'}</div><div class="l">${withWeight ? 'mejor peso (kg)' : 'mejores reps'}</div></div>
+    ${secondTile}
+    <div class="stat-tile"><div class="v">${sessions.length}</div><div class="l">${sessions.length === 1 ? 'sesión' : 'sesiones'}</div></div>
+  `;
+
+  root.querySelector('#chart-title').textContent = withWeight ? 'Peso más alto por sesión (kg)' : 'Reps más altas por sesión';
+  drawLineChart(root.querySelector('#chart-wrap'), root.querySelector('#chart-sub'), points, measure);
+
+  const list = root.querySelector('#session-list');
+  sessions.slice().reverse().forEach((s) => {
+    const row = document.createElement('div');
+    row.className = 'session-row';
+    const dateEl = document.createElement('div');
+    dateEl.className = 'd';
+    dateEl.textContent = `${dayLabelForISO(s.date)} ${ddmmFromISO(s.date)}/${s.date.slice(0, 4)}`;
+    const setsEl = document.createElement('div');
+    setsEl.textContent = entryText(s.entry);
+    row.appendChild(dateEl);
+    row.appendChild(setsEl);
+    if (s.entry.nota) {
+      const noteEl = document.createElement('div');
+      noteEl.className = 'n';
+      noteEl.textContent = s.entry.nota;
+      row.appendChild(noteEl);
+    }
+    list.appendChild(row);
+  });
+}
+
+// Línea de una sola serie: eje de tiempo real, marcadores de 8px con aro del
+// color del fondo, etiqueta directa en el último punto y lectura al tocar.
+function drawLineChart(wrap, subEl, points, measure) {
+  if (!points.length) {
+    wrap.innerHTML = '<div class="meal-empty">Sin datos para graficar.</div>';
+    return;
+  }
+  const W = 320, H = 170, L = 34, R = 30, T = 12, B = 22;
+  const times = points.map((p) => dateFromISO(p.date).getTime());
+  const tMin = times[0], tMax = times[times.length - 1];
+  const values = points.map((p) => p.value);
+  let vMin = Math.min(...values), vMax = Math.max(...values);
+  const pad = (vMax - vMin) * 0.15 || Math.max(1, vMax * 0.05);
+  vMin = Math.max(0, vMin - pad);
+  vMax += pad;
+  const x = (t) => (tMax === tMin ? (L + W - R) / 2 : L + ((t - tMin) / (tMax - tMin)) * (W - L - R));
+  const y = (v) => T + (1 - (v - vMin) / (vMax - vMin)) * (H - T - B);
+  const xy = points.map((p, i) => ({ px: x(times[i]), py: y(p.value) }));
+
+  const grid = [0, 0.5, 1].map((f) => {
+    const v = vMin + (vMax - vMin) * f;
+    return `<line x1="${L}" x2="${W - R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="var(--border)" stroke-width="1"/>
+      <text x="${L - 6}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${fmtNum(v)}</text>`;
+  }).join('');
+  const path = xy.map((p, i) => `${i ? 'L' : 'M'}${p.px.toFixed(1)} ${p.py.toFixed(1)}`).join(' ');
+  const dots = xy.map((p) => `<circle cx="${p.px.toFixed(1)}" cy="${p.py.toFixed(1)}" r="4" fill="var(--gold)" stroke="var(--bg-elev)" stroke-width="2"/>`).join('');
+  const lastXY = xy[xy.length - 1];
+  const xLabels = points.length > 1
+    ? `<text x="${L}" y="${H - 6}">${ddmmFromISO(points[0].date)}</text><text x="${W - R}" y="${H - 6}" text-anchor="end">${ddmmFromISO(points[points.length - 1].date)}</text>`
+    : `<text x="${lastXY.px.toFixed(1)}" y="${H - 6}" text-anchor="middle">${ddmmFromISO(points[0].date)}</text>`;
+
+  wrap.innerHTML = `
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Evolución por sesión">
+      ${grid}
+      <line id="chart-cross" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--text-dim)" stroke-width="1" visibility="hidden"/>
+      <path d="${path}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}
+      <text x="${(lastXY.px + 7).toFixed(1)}" y="${(lastXY.py + 3).toFixed(1)}" style="fill:var(--text);font-weight:700;">${fmtNum(points[points.length - 1].value)}</text>
+      ${xLabels}
+    </svg>
+  `;
+  const svg = wrap.querySelector('svg');
+  const cross = svg.querySelector('#chart-cross');
+  const describe = (i) => {
+    const p = points[i];
+    subEl.textContent = `${ddmmFromISO(p.date)}/${p.date.slice(0, 4)} · ${fmtNum(p.value)} ${measure} · ${entryText(p.entry)}`;
+    cross.setAttribute('x1', xy[i].px.toFixed(1));
+    cross.setAttribute('x2', xy[i].px.toFixed(1));
+    cross.setAttribute('visibility', 'visible');
+  };
+  const onPoint = (ev) => {
+    const rect = svg.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / rect.width) * W;
+    let nearest = 0;
+    xy.forEach((p, i) => { if (Math.abs(p.px - px) < Math.abs(xy[nearest].px - px)) nearest = i; });
+    describe(nearest);
+  };
+  svg.addEventListener('pointerdown', onPoint);
+  svg.addEventListener('pointermove', onPoint);
+  subEl.textContent = points.length > 1 ? 'Toca la gráfica para ver cada sesión.' : '';
+}
+
+/* ======================================================================
    DESCARGAR PROGRESO (CSV)
    Exporta todas las series marcadas como completadas, de todo el
-   historial guardado en gym_progress, una fila por serie.
+   historial guardado en gym_progress, una fila por serie. Peso en kilos.
    ====================================================================== */
 function csvField(value) {
   const str = String(value ?? '');
   return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
+function downloadFile(filename, text, mime) {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
-function buildProgressCSV() {
-  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps', 'lado']];
+function buildProgressRows() {
+  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps', 'lado', 'nota']];
   Object.keys(progressData).sort().forEach((dateISO) => {
-    Object.keys(progressData[dateISO]).forEach((dayKey) => {
-      const dayEntry = progressData[dateISO][dayKey];
+    Object.keys(progressData[dateISO] || {}).forEach((dayKey) => {
+      const dayEntry = progressData[dateISO][dayKey] || {};
       const dayLabel = DAY_LABELS[dayKey] || dayKey;
       Object.keys(dayEntry).forEach((exName) => {
         const entry = dayEntry[exName] || {};
         const push = (sets, lado) => (sets || []).forEach((set, i) => {
           if (!set || !set.done) return;
-          rows.push([dateISO, dayLabel, exName, i + 1, toKg(set.kg, entry.unit), set.reps || '', lado]);
+          rows.push([dateISO, dayLabel, exName, i + 1, toKg(set.kg, entry.unit), set.reps || '', lado, entry.nota || '']);
         });
         push(entry.sets, entry.setsI ? 'derecho' : '');
         push(entry.setsI, 'izquierdo');
       });
     });
   });
-  return rows.map((r) => r.map(csvField).join(',')).join('\r\n');
+  return rows;
+}
+function buildProgressCSV() {
+  return buildProgressRows().map((r) => r.map(csvField).join(',')).join('\r\n');
 }
 
 document.getElementById('download-progress-btn').addEventListener('click', () => {
@@ -1226,16 +1755,449 @@ document.getElementById('download-progress-btn').addEventListener('click', () =>
     showToast('Aún no hay series completadas');
     return;
   }
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `gym-progreso-${todayISO()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  downloadFile(`gym-progreso-${todayISO()}.csv`, '﻿' + csv, 'text/csv;charset=utf-8;');
 });
+
+/* ======================================================================
+   RUTINA EDITABLE
+   Convierte el JSON de un bloque ({ bloque: { nombre, dias: [...] } }) a la
+   forma interna de ROUTINE. Lanza un Error con mensaje legible si algo falta.
+   ====================================================================== */
+function normalizeDayName(name) {
+  return String(name || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+}
+function routineFromBlockJSON(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error('El texto no es un JSON válido.');
+  }
+  const b = (data && data.bloque) || data;
+  if (!b || !Array.isArray(b.dias) || !b.dias.length) throw new Error('Falta la lista "dias" del bloque.');
+
+  const dias = {};
+  b.dias.forEach((d) => {
+    const key = normalizeDayName(d.dia);
+    if (!(key in DAY_INDEX)) throw new Error(`Día no reconocido: "${d.dia}".`);
+    if (dias[key]) throw new Error(`El día "${d.dia}" está repetido.`);
+    if (!Array.isArray(d.ejercicios) || !d.ejercicios.length) throw new Error(`"${d.dia}" no tiene ejercicios.`);
+    const names = new Set();
+    dias[key] = {
+      nombre: String(d.enfoque || d.nombre || DAY_LABELS[key]),
+      ejercicios: d.ejercicios.map((e) => {
+        const nombre = String(e.nombre || '').trim();
+        const sets = Number(e.series);
+        if (!nombre) throw new Error(`Hay un ejercicio sin nombre en "${d.dia}".`);
+        if (names.has(nombre)) throw new Error(`"${nombre}" está repetido en "${d.dia}".`);
+        if (!Number.isInteger(sets) || sets < 1 || sets > 20) throw new Error(`"${nombre}": "series" debe ser un número entre 1 y 20.`);
+        names.add(nombre);
+        return {
+          nombre, sets,
+          repsLabel: String(e.reps ?? ''),
+          restSec: Math.max(0, Number(e.descanso_seg) || 0),
+          uni: !!e.unilateral,
+          nota: e.cue ? String(e.cue) : '',
+        };
+      }),
+    };
+  });
+
+  const reglas = [];
+  Object.entries(b.principios || {}).forEach(([key, value]) => {
+    const label = key.replace(/_/g, ' ');
+    const text = Array.isArray(value) ? value.join('; ') : String(value);
+    reglas.push(`${label.charAt(0).toUpperCase()}${label.slice(1)}: ${text}`);
+  });
+  return {
+    bloque: {
+      nombre: String(b.nombre || 'Rutina'),
+      version: b.version ? String(b.version) : '',
+      objetivo: b.objetivo ? String(b.objetivo) : '',
+      reglas,
+    },
+    order: Object.keys(dias).sort((a, c) => DAY_INDEX[a] - DAY_INDEX[c]),
+    dias,
+  };
+}
+function applyRoutine(routine) {
+  ROUTINE = routine || DEFAULT_ROUTINE;
+  if (routine) {
+    saveJSON(LS_ROUTINE, routine);
+  } else {
+    localStorage.removeItem(LS_ROUTINE);
+    markDirty();
+  }
+  if (!ROUTINE.dias[currentDay]) currentDay = ROUTINE.order[0];
+}
+
+document.getElementById('routine-apply').addEventListener('click', () => {
+  const input = document.getElementById('routine-json');
+  if (!input.value.trim()) {
+    showToast('Pega primero el JSON del bloque');
+    return;
+  }
+  try {
+    applyRoutine(routineFromBlockJSON(input.value));
+  } catch (err) {
+    window.alert(`No se pudo aplicar la rutina.\n${err.message}`);
+    return;
+  }
+  input.value = '';
+  renderDataView();
+  showToast('Rutina actualizada');
+});
+document.getElementById('routine-reset').addEventListener('click', () => {
+  if (!window.confirm('¿Volver a la rutina incluida en la app? Tu historial no se borra.')) return;
+  applyRoutine(null);
+  renderDataView();
+  showToast('Rutina restablecida');
+});
+
+/* ======================================================================
+   RESPALDO: archivo y Google Sheets
+   El respaldo incluye entrenamientos, sustituciones, rutina y comidas.
+   ====================================================================== */
+function buildBackup() {
+  return {
+    app: 'gym-tracker',
+    version: 1,
+    savedAt: new Date().toISOString(),
+    progress: progressData,
+    subs: subsData,
+    routine: loadJSON(LS_ROUTINE, null),
+    food: loadJSON('food_entries', []),
+    unit: defaultUnit,
+  };
+}
+function backupHasData(b) {
+  return !!b && ((b.progress && Object.keys(b.progress).length > 0) || (Array.isArray(b.food) && b.food.length > 0));
+}
+// Reemplaza los datos de este teléfono por los del respaldo y recarga la app.
+function applyBackup(b) {
+  if (!b || b.app !== 'gym-tracker' || typeof b.progress !== 'object' || b.progress === null) {
+    throw new Error('El archivo no es un respaldo de Gym Tracker.');
+  }
+  localStorage.setItem(LS_PROGRESS, JSON.stringify(b.progress));
+  localStorage.setItem(LS_SUBS, JSON.stringify(b.subs || {}));
+  localStorage.setItem('food_entries', JSON.stringify(Array.isArray(b.food) ? b.food : []));
+  if (isValidRoutine(b.routine)) localStorage.setItem(LS_ROUTINE, JSON.stringify(b.routine));
+  else localStorage.removeItem(LS_ROUTINE);
+  if (b.unit === 'lb' || b.unit === 'kg') localStorage.setItem(LS_UNIT, JSON.stringify(b.unit));
+  window.location.reload();
+}
+function fmtDateTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  return `${ddmmFromISO(isoFromDate(d))} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+document.getElementById('backup-export').addEventListener('click', () => {
+  downloadFile(`gym-tracker-respaldo-${todayISO()}.json`, JSON.stringify(buildBackup()), 'application/json');
+});
+document.getElementById('backup-import').addEventListener('click', () => {
+  document.getElementById('backup-file').click();
+});
+document.getElementById('backup-file').addEventListener('change', (ev) => {
+  const file = ev.target.files[0];
+  ev.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let b;
+    try {
+      b = JSON.parse(reader.result);
+      if (!b || b.app !== 'gym-tracker') throw new Error();
+    } catch (e) {
+      window.alert('El archivo no es un respaldo de Gym Tracker.');
+      return;
+    }
+    const when = b.savedAt ? ` del ${fmtDateTime(b.savedAt)}` : '';
+    if (!window.confirm(`¿Reemplazar los datos de este teléfono con el respaldo${when}? Lo que hay ahora aquí se pierde.`)) return;
+    if (syncState.url) {
+      syncState.dirty = true; // lo importado debe llegar también a la hoja
+      saveSyncState();
+    }
+    try {
+      applyBackup(b);
+    } catch (err) {
+      window.alert(err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+
+/* ---- Google Sheets (Apps Script publicado como aplicación web) ---- */
+const APPS_SCRIPT_CODE = `const HOJA_RESPALDO = 'respaldo';
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    escribirTabla(ss, 'Entrenamientos', data.rows);
+    escribirTabla(ss, 'Comidas', data.foodRows);
+    const texto = JSON.stringify(data.backup);
+    const trozos = [];
+    for (let i = 0; i < texto.length; i += 40000) trozos.push(['J:' + texto.slice(i, i + 40000)]);
+    const hoja = obtenerHoja(ss, HOJA_RESPALDO);
+    hoja.clearContents();
+    hoja.getRange(1, 1, trozos.length, 1).setNumberFormat('@').setValues(trozos);
+    return responder({ ok: true, savedAt: data.backup.savedAt });
+  } catch (err) {
+    return responder({ ok: false, error: String(err) });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function doGet() {
+  try {
+    const hoja = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(HOJA_RESPALDO);
+    if (!hoja || hoja.getLastRow() === 0) return responder({ ok: true, backup: null });
+    const texto = hoja.getRange(1, 1, hoja.getLastRow(), 1).getValues()
+      .map(function (fila) { return String(fila[0]).slice(2); }).join('');
+    return responder({ ok: true, backup: JSON.parse(texto) });
+  } catch (err) {
+    return responder({ ok: false, error: String(err) });
+  }
+}
+
+function obtenerHoja(ss, nombre) {
+  return ss.getSheetByName(nombre) || ss.insertSheet(nombre);
+}
+
+function escribirTabla(ss, nombre, filas) {
+  const hoja = obtenerHoja(ss, nombre);
+  hoja.clearContents();
+  if (!filas || !filas.length) return;
+  const limpias = filas.map(function (fila) {
+    return fila.map(function (v) {
+      return typeof v === 'string' && /^[=+\\-@]/.test(v) ? "'" + v : v;
+    });
+  });
+  hoja.getRange(1, 1, limpias.length, limpias[0].length).setValues(limpias);
+}
+
+function responder(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+`;
+
+function saveSyncState() {
+  localStorage.setItem(LS_SYNC, JSON.stringify(syncState));
+}
+function markDirty() {
+  syncChangeCount++;
+  if (!syncState.url) return;
+  syncState.dirty = true;
+  saveSyncState();
+  renderSyncStatus();
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushBackup, 4000);
+}
+async function syncRequest(options) {
+  const res = await fetch(syncState.url, options);
+  if (!res.ok) throw new Error(`La hoja respondió con error ${res.status}.`);
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error('La respuesta no vino del script. Revisa que el acceso sea "Cualquier persona".');
+  }
+  if (!data.ok) throw new Error(data.error || 'El script reportó un error.');
+  return data;
+}
+// Manda el respaldo completo a la hoja. Nunca envía un respaldo vacío, para no
+// borrar la hoja desde un teléfono recién instalado.
+async function pushBackup() {
+  clearTimeout(syncTimer);
+  if (!syncState.url || !syncState.enabled || !navigator.onLine) return false;
+  const backup = buildBackup();
+  if (!backupHasData(backup)) return false;
+  const countAtStart = syncChangeCount;
+  const foodRows = [['fecha', 'dia', 'tipo_comida', 'descripcion']].concat(
+    backup.food.slice().sort((a, b) => String(a.fecha).localeCompare(String(b.fecha)) || a.creadoEn - b.creadoEn)
+      .map((e) => [e.fecha, dayLabelForISO(e.fecha), e.tipoComida, e.descripcion]));
+  try {
+    await syncRequest({ method: 'POST', body: JSON.stringify({ backup, rows: buildProgressRows(), foodRows }) });
+    syncState.lastOk = backup.savedAt;
+    syncState.lastError = '';
+    if (countAtStart === syncChangeCount) syncState.dirty = false;
+  } catch (err) {
+    syncState.lastError = err.message || 'Sin conexión con la hoja.';
+  }
+  saveSyncState();
+  renderSyncStatus();
+  if (syncState.dirty && !syncState.lastError) markDirty();
+  return !syncState.lastError;
+}
+function fetchRemoteBackup() {
+  return syncRequest({ method: 'GET' }).then((data) => data.backup || null);
+}
+
+function renderSyncStatus() {
+  const el = document.getElementById('sync-status');
+  const connected = !!syncState.url;
+  let text;
+  if (!connected) text = 'Sin conectar. Tus datos solo están en este teléfono.';
+  else if (!syncState.enabled) text = 'Conectado, en espera: elige abajo qué datos conservar.';
+  else if (syncState.lastError) text = `No se pudo respaldar: ${syncState.lastError} Se reintenta al volver a la app o al registrar algo.`;
+  else if (syncState.dirty) text = 'Hay cambios pendientes de enviar a la hoja.';
+  else if (syncState.lastOk) text = `Respaldado en la hoja: ${fmtDateTime(syncState.lastOk)}.`;
+  else text = 'Conectado. Se respaldará al registrar algo.';
+  el.textContent = text;
+  el.classList.toggle('err', connected && !!syncState.lastError);
+
+  document.getElementById('sync-url').style.display = connected ? 'none' : 'block';
+  document.getElementById('sync-connect').style.display = connected ? 'none' : '';
+  ['sync-now', 'sync-restore', 'sync-disconnect'].forEach((id) => {
+    document.getElementById(id).style.display = connected ? '' : 'none';
+  });
+  const note = document.getElementById('autosave-note');
+  note.textContent = 'Todo se guarda al escribir' + (connected && syncState.enabled
+    ? (syncState.dirty || syncState.lastError ? ' · respaldo pendiente' : ' · respaldado en tu hoja')
+    : '');
+}
+
+let pendingRemote = null;
+function showSyncChoice(remote) {
+  pendingRemote = remote;
+  document.getElementById('sync-choice').style.display = remote ? 'block' : 'none';
+  if (remote) {
+    document.getElementById('sync-choice-text').textContent =
+      `La hoja ya tiene un respaldo${remote.savedAt ? ` del ${fmtDateTime(remote.savedAt)}` : ''} y este teléfono también tiene datos. ¿Cuáles conservas? Los otros se reemplazan.`;
+  }
+}
+
+document.getElementById('sync-connect').addEventListener('click', async () => {
+  const url = document.getElementById('sync-url').value.trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) {
+    window.alert('Pega la URL de la aplicación web. Empieza con https://script.google.com/ y termina en /exec.');
+    return;
+  }
+  syncState = { url, enabled: false };
+  document.getElementById('sync-status').textContent = 'Conectando…';
+  let remote;
+  try {
+    remote = await fetchRemoteBackup();
+  } catch (err) {
+    syncState = {};
+    saveSyncState();
+    renderSyncStatus();
+    window.alert(`No se pudo conectar.\n${err.message}`);
+    return;
+  }
+  saveSyncState();
+  const local = buildBackup();
+  if (backupHasData(remote) && backupHasData(local)) {
+    showSyncChoice(remote);
+    renderSyncStatus();
+    return;
+  }
+  if (backupHasData(remote)) {
+    syncState.enabled = true;
+    syncState.lastOk = remote.savedAt || '';
+    saveSyncState();
+    if (window.confirm('La hoja tiene un respaldo y este teléfono está vacío. ¿Restaurarlo aquí?')) {
+      applyBackup(remote);
+      return;
+    }
+    renderSyncStatus();
+    return;
+  }
+  syncState.enabled = true;
+  syncState.dirty = backupHasData(local);
+  saveSyncState();
+  renderSyncStatus();
+  await pushBackup();
+});
+document.getElementById('sync-choice-restore').addEventListener('click', () => {
+  if (!pendingRemote) return;
+  syncState.enabled = true;
+  syncState.dirty = false;
+  syncState.lastOk = pendingRemote.savedAt || '';
+  saveSyncState();
+  applyBackup(pendingRemote);
+});
+document.getElementById('sync-choice-keep').addEventListener('click', async () => {
+  showSyncChoice(null);
+  syncState.enabled = true;
+  syncState.dirty = true;
+  saveSyncState();
+  renderSyncStatus();
+  await pushBackup();
+});
+document.getElementById('sync-now').addEventListener('click', async () => {
+  if (!syncState.enabled) {
+    showToast('Primero elige qué datos conservar');
+    return;
+  }
+  if (!backupHasData(buildBackup())) {
+    showToast('Aún no hay nada que respaldar');
+    return;
+  }
+  document.getElementById('sync-status').textContent = 'Respaldando…';
+  syncState.dirty = true;
+  const ok = await pushBackup();
+  showToast(ok ? 'Respaldo enviado a la hoja' : 'No se pudo respaldar');
+});
+document.getElementById('sync-restore').addEventListener('click', async () => {
+  document.getElementById('sync-status').textContent = 'Leyendo la hoja…';
+  let remote;
+  try {
+    remote = await fetchRemoteBackup();
+  } catch (err) {
+    renderSyncStatus();
+    window.alert(`No se pudo leer la hoja.\n${err.message}`);
+    return;
+  }
+  renderSyncStatus();
+  if (!backupHasData(remote)) {
+    window.alert('La hoja todavía no tiene un respaldo.');
+    return;
+  }
+  const when = remote.savedAt ? ` del ${fmtDateTime(remote.savedAt)}` : '';
+  if (!window.confirm(`¿Reemplazar los datos de este teléfono con el respaldo${when}? Lo que hay ahora aquí se pierde.`)) return;
+  syncState.enabled = true;
+  syncState.dirty = false;
+  saveSyncState();
+  applyBackup(remote);
+});
+document.getElementById('sync-disconnect').addEventListener('click', () => {
+  if (!window.confirm('¿Dejar de respaldar en la hoja? Lo que ya está en la hoja no se borra.')) return;
+  clearTimeout(syncTimer);
+  syncState = {};
+  saveSyncState();
+  showSyncChoice(null);
+  renderSyncStatus();
+});
+document.getElementById('sync-copy-script').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(APPS_SCRIPT_CODE);
+    showToast('Script copiado');
+  } catch (e) {
+    showToast('No se pudo copiar: selecciónalo a mano');
+  }
+});
+
+// Reintenta lo pendiente al recuperar señal o al volver a la app.
+window.addEventListener('online', () => { if (syncState.dirty) pushBackup(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && syncState.dirty) pushBackup();
+});
+setTimeout(() => { if (syncState.dirty) pushBackup(); }, 1500);
+
+function renderDataView() {
+  document.getElementById('sync-script').textContent = APPS_SCRIPT_CODE;
+  const b = ROUTINE.bloque || {};
+  document.getElementById('routine-current').textContent =
+    `Rutina activa: ${b.nombre || 'Rutina'}${b.version ? ` (${b.version})` : ''}${ROUTINE === DEFAULT_ROUTINE ? '' : ' · pegada desde aquí'}. `
+    + 'Para cambiar de bloque pega su JSON; tu historial se conserva.';
+  renderSyncStatus();
+}
 
 /* ======================================================================
    ZONA DE ALIMENTACIÓN — registro diario de comidas
@@ -1537,6 +2499,8 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
     document.getElementById(btn.dataset.view).classList.add('active');
     if (btn.dataset.view === 'view-week') renderWeekView();
     if (btn.dataset.view === 'view-day') renderDayView();
+    if (btn.dataset.view === 'view-progress') renderProgressView();
+    if (btn.dataset.view === 'view-data') renderDataView();
     if (btn.dataset.view === 'view-food-today') renderFoodTodayView();
     if (btn.dataset.view === 'view-food-history') renderFoodHistoryView();
   });
@@ -1546,6 +2510,7 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
    INIT
    ====================================================================== */
 renderDayView();
+renderDataView();
 
 if ('serviceWorker' in navigator) {
   // En cuanto una versión nueva del service worker toma el control (gracias a
