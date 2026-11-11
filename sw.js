@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gym-tracker-v5';
+const CACHE_NAME = 'gym-tracker-v7';
 const LOCAL_ASSETS = [
   './',
   './index.html',
@@ -21,18 +21,25 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Responde desde caché al instante (la app abre aunque no haya señal) y en
+// paralelo trae la versión nueva de la red para la siguiente apertura.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-          return response;
-        })
-        .catch(() => cached);
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(event.request).then((cached) => {
+        const fresh = fetch(event.request)
+          .then((response) => {
+            if (response.ok) cache.put(event.request, response.clone());
+            return response;
+          })
+          .catch(() => cached);
+        if (cached) {
+          event.waitUntil(fresh);
+          return cached;
+        }
+        return fresh;
+      })
+    )
   );
 });

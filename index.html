@@ -177,6 +177,40 @@
   }
   .set-row input:focus { outline: none; border-color: var(--gold); }
   .set-row input::placeholder { color: #565A66; }
+  .exercise-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .unit-toggle {
+    flex: 0 0 auto; display: flex; padding: 2px; border-radius: 9px;
+    border: 1px solid var(--border); background: var(--bg-elev-2);
+  }
+  .unit-toggle span {
+    padding: 6px 10px; border-radius: 7px; font-size: 12px; font-weight: 700; color: var(--text-dim);
+  }
+  .unit-toggle span.on { background: var(--gold); color: #13151A; }
+  .set-row.uni { grid-template-columns: 34px 1fr 1fr 40px; }
+  .set-row.side-last { margin-bottom: 14px; }
+
+  .week-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--bg-elev-2); border: 1px solid var(--gold-dim); border-radius: 10px;
+    padding: 8px 12px; margin-bottom: 12px; font-size: 12.5px; color: var(--text);
+  }
+  .week-banner button {
+    background: none; border: none; color: var(--gold); font-size: 12.5px; font-weight: 700; padding: 4px 0;
+  }
+  .week-nav {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+    font-size: 14px; font-weight: 700;
+  }
+  .week-nav button {
+    width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--bg-elev); color: var(--text); font-size: 20px;
+  }
+  .week-nav button:disabled { opacity: 0.3; }
+  .block-info { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+  .block-info summary { color: var(--gold); font-weight: 700; font-size: 14px; }
+  .block-info ul { margin: 8px 0 0; padding-left: 18px; }
+  .block-info li { margin-bottom: 4px; }
+  .block-info p { margin-top: 8px; }
 
   .check-btn {
     width: 40px; height: 40px;
@@ -232,7 +266,10 @@
     padding: 14px 16px;
     margin-bottom: 12px;
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    cursor: pointer;
   }
+  .week-card:active { opacity: 0.8; }
+  .week-card.today { border-color: var(--gold-dim); }
   .week-card .info { flex: 1; }
   .week-card .day-name { font-size: 15px; font-weight: 700; }
   .week-card .day-focus { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
@@ -453,6 +490,10 @@
 
 <!-- ================= VISTA: RUTINA DEL DÍA ================= -->
 <section class="view active" id="view-day" data-section="gym">
+  <div class="week-banner" id="week-banner" style="display:none;">
+    <span id="week-banner-text"></span>
+    <button id="week-banner-back">Volver a esta semana</button>
+  </div>
   <div class="day-chips" id="day-chips"></div>
 
   <div class="progress-wrap">
@@ -470,7 +511,13 @@
 
 <!-- ================= VISTA: SEMANA ================= -->
 <section class="view" id="view-week" data-section="gym">
+  <div class="week-nav">
+    <button id="week-prev" aria-label="Semana anterior">‹</button>
+    <span id="week-nav-label"></span>
+    <button id="week-next" aria-label="Semana siguiente">›</button>
+  </div>
   <div id="week-list"></div>
+  <details class="card block-info" id="block-info"></details>
 </section>
 
 <!-- ================= VISTA: ALIMENTACIÓN — HOY ================= -->
@@ -541,19 +588,33 @@
 
    Forma de cada ejercicio:
    { nombre, sets: <num. de series>, repsLabel: <texto a mostrar, ej "6-8" o "10/pierna">,
-     restSec: <segundos de descanso entre series>, nota: <texto técnico> }
+     restSec: <segundos de descanso entre series>, uni: <true si se registra por lado>,
+     nota: <texto técnico> }
    ====================================================================== */
 const ROUTINE = {
+  bloque: {
+    nombre: 'Bloque 5',
+    version: 'v2 · ajustes del 11 nov 2026',
+    objetivo: 'Recomposición corporal: físico denso, seco, atlético.',
+    reglas: [
+      'Doble progresión: primero sube reps hasta el tope del rango en todas las series; solo entonces sube carga.',
+      'Sube 2-5% después de 2 semanas consecutivas limpias (sin caída de reps). Si el siguiente escalón de mancuerna es mayor a 5%, sigue sumando reps.',
+      'No subas carga en más de un ejercicio pesado por sesión.',
+      'Descansos obligatorios por ejercicio.',
+      'Unilaterales: se registran por lado (D = derecho, I = izquierdo).',
+      'Sin patrón squat, sin peso muerto convencional bilateral, sin abdomen colgado.',
+    ],
+  },
   order: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'],
   dias: {
     lunes: {
       nombre: 'Fuerza Lower Body',
       ejercicios: [
-        { nombre: 'Peso muerto rumano a una pierna con kettlebell', sets: 4, repsLabel: '8/pierna', restSec: 120, nota: 'Rodilla de apoyo semi-flexionada, torso casi paralelo al piso.' },
-        { nombre: 'Prensa de piernas', sets: 4, repsLabel: '10', restSec: 120, nota: 'Pies altos en la plataforma, énfasis en glúteo/isquios.' },
-        { nombre: 'Step-up con mancuernas', sets: 4, repsLabel: '10/pierna', restSec: 90, nota: 'Banco a la altura de la rodilla, empuja con el talón, no con el pie de apoyo trasero.' },
-        { nombre: 'Hip thrust a una pierna', sets: 3, repsLabel: '10/pierna', restSec: 90, nota: 'Progresión desde el bilateral de Bloque 4.' },
-        { nombre: 'Curl femoral tumbado (máquina)', sets: 3, repsLabel: '12', restSec: 75, nota: 'Squeeze arriba.' },
+        { nombre: 'Peso muerto rumano a una pierna con kettlebell', sets: 4, repsLabel: '8/pierna', restSec: 120, uni: true, nota: 'Rodilla de apoyo semi-flexionada, torso casi paralelo al piso.' },
+        { nombre: 'Prensa de piernas', sets: 4, repsLabel: '10', restSec: 120, nota: 'Pies altos en la plataforma, énfasis en glúteo/isquios, espalda baja pegada al respaldo.' },
+        { nombre: 'Step-up con mancuernas', sets: 4, repsLabel: '10/pierna', restSec: 90, uni: true, nota: 'Banco a la altura donde la rodilla queda a 90°, empuja con el talón del pie que sube.' },
+        { nombre: 'Hip thrust a una pierna', sets: 3, repsLabel: '10/pierna', restSec: 90, uni: true, nota: 'Progresión desde el bilateral de Bloque 4.' },
+        { nombre: 'Curl femoral tumbado (máquina)', sets: 4, repsLabel: '12', restSec: 75, nota: 'Squeeze arriba, baja controlado.' },
         { nombre: 'Extensión de cuádriceps bilateral', sets: 3, repsLabel: '15', restSec: 60, nota: 'Controlado, sin rebote.' },
       ],
     },
@@ -563,7 +624,7 @@ const ROUTINE = {
         { nombre: 'Press inclinado con mancuernas', sets: 5, repsLabel: '5-6', restSec: 150, nota: 'Ángulo 30°, control en bajada.' },
         { nombre: 'Remo con barra agarre prono', sets: 5, repsLabel: '5-6', restSec: 150, nota: 'Torso a 45°, tira hacia el ombligo.' },
         { nombre: 'Press Arnold con mancuernas', sets: 4, repsLabel: '8', restSec: 120, nota: 'Rotación completa, controla el descenso.' },
-        { nombre: 'Jalón al pecho agarre supino', sets: 4, repsLabel: '8-10', restSec: 90, nota: 'Cambia énfasis de bíceps vs. el agarre neutro de Bloque 4.' },
+        { nombre: 'Jalón al pecho agarre supino', sets: 4, repsLabel: '8-10', restSec: 90, nota: 'Codos hacia abajo, squeeze 1 seg.' },
         { nombre: 'Face pull con banda', sets: 3, repsLabel: '15', restSec: 60, nota: 'Codos altos.' },
         { nombre: 'Curl martillo con mancuernas', sets: 3, repsLabel: '12', restSec: 60, nota: 'Pieza de brazo repartida del día.' },
       ],
@@ -573,32 +634,32 @@ const ROUTINE = {
       ejercicios: [
         { nombre: 'Press en máquina convergente', sets: 4, repsLabel: '12-15', restSec: 75, nota: '' },
         { nombre: 'Remo en máquina agarre neutro', sets: 4, repsLabel: '12-15', restSec: 75, nota: '' },
-        { nombre: 'Elevaciones laterales con mancuerna', sets: 4, repsLabel: '15', restSec: 60, nota: '' },
+        { nombre: 'Elevaciones laterales con mancuerna', sets: 5, repsLabel: '15', restSec: 60, nota: 'Sin balanceo.' },
         { nombre: 'Curl con barra Z', sets: 4, repsLabel: '10-12', restSec: 75, nota: '' },
         { nombre: 'Extensión de tríceps en polea, barra recta', sets: 4, repsLabel: '10-12', restSec: 75, nota: '' },
-        { nombre: 'Extensión de tríceps unilateral con mancuerna sobre banco', sets: 3, repsLabel: '12/brazo', restSec: 60, nota: '' },
+        { nombre: 'Extensión de tríceps unilateral con mancuerna sobre banco', sets: 3, repsLabel: '12/brazo', restSec: 60, uni: true, nota: '' },
       ],
     },
     jueves: {
       nombre: 'Brazo (énfasis fuerte) + Core',
       ejercicios: [
-        { nombre: 'Curl con mancuernas alternado', sets: 4, repsLabel: '10/brazo', restSec: 75, nota: '' },
-        { nombre: 'Curl concentrado con mancuerna', sets: 3, repsLabel: '12/brazo', restSec: 60, nota: '' },
-        { nombre: 'Press cerrado en banca (close-grip)', sets: 4, repsLabel: '10', restSec: 90, nota: '' },
-        { nombre: 'Extensión de tríceps unilateral en polea', sets: 3, repsLabel: '15/brazo', restSec: 60, nota: '' },
-        { nombre: 'Rueda abdominal', sets: 4, repsLabel: '10-12', restSec: 75, nota: 'Rango máximo sin perder lumbar.' },
-        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 60, nota: 'Antirotación, 1 seg extendido.' },
+        { nombre: 'Press cerrado en banca (close-grip)', sets: 4, repsLabel: '10', restSec: 90, nota: 'Primer ejercicio del día (compuesto). Carga base 32 kg; no subir hasta 2 semanas limpias.' },
+        { nombre: 'Curl inclinado con mancuernas', sets: 3, repsLabel: '10-12', restSec: 75, nota: 'Banco inclinado, brazos colgando detrás del torso para estirar el bíceps; empieza con la carga que permita 10 reps limpias.' },
+        { nombre: 'Curl concentrado con mancuerna', sets: 3, repsLabel: '12/brazo', restSec: 60, uni: true, nota: 'Codo apoyado, pico de contracción.' },
+        { nombre: 'Extensión de tríceps unilateral en polea', sets: 3, repsLabel: '15/brazo', restSec: 60, uni: true, nota: '' },
+        { nombre: 'Rueda abdominal', sets: 3, repsLabel: '10-12', restSec: 75, nota: 'Rango máximo sin perder la lumbar; si las series 2-3 caen por debajo de 8 reps, cambia por crunch en polea.' },
+        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 60, uni: true, nota: 'Antirrotación, 1 seg extendido.' },
       ],
     },
     viernes: {
       nombre: 'Metabólico Full Body',
       ejercicios: [
         { nombre: 'Press de pecho en máquina', sets: 3, repsLabel: '15', restSec: 45, nota: '' },
-        { nombre: 'Remo en polea baja sentado', sets: 3, repsLabel: '15', restSec: 45, nota: '' },
-        { nombre: 'Step-up con mancuernas (ligero)', sets: 3, repsLabel: '12/pierna', restSec: 45, nota: '' },
+        { nombre: 'Remo en polea baja sentado', sets: 3, repsLabel: '15', restSec: 45, nota: 'Agarre cerrado (neutro), codos pegados al torso.' },
+        { nombre: 'Step-up con mancuernas (ligero)', sets: 3, repsLabel: '12/pierna', restSec: 45, uni: true, nota: 'Versión ligera: el progreso de carga va en el step-up del lunes.' },
         { nombre: 'Elevaciones laterales con mancuerna', sets: 3, repsLabel: '15', restSec: 45, nota: '' },
-        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 45, nota: '' },
-        { nombre: 'Caminata inclinada', sets: 1, repsLabel: '15 min', restSec: 0, nota: 'Zona 2, ritmo conversacional.' },
+        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 45, uni: true, nota: '' },
+        { nombre: 'Caminata inclinada', sets: 1, repsLabel: '15 min zona 2', restSec: 0, nota: '' },
       ],
     },
   },
@@ -614,7 +675,13 @@ const DAY_LABELS = {
 /* ======================================================================
    ESTADO Y PERSISTENCIA (localStorage)
    ====================================================================== */
-const LS_PROGRESS = 'gym_progress';       // { "YYYY-MM-DD": { dayKey: { "<nombre del ejercicio>": { sets: [{kg,reps,done}] } } } }
+// { "YYYY-MM-DD": { dayKey: { "<nombre del ejercicio>": { sets: [{kg,reps,done}], setsI?: [...] } } } }
+// En ejercicios unilaterales `sets` es el lado derecho y `setsI` el izquierdo.
+// El campo `kg` de cada serie guarda el número tal como se escribió, en la
+// unidad del ejercicio ese día (`unit`: 'kg' o 'lb'; sin `unit` = kg).
+const LS_PROGRESS = 'gym_progress';
+const LS_UNIT = 'gym_unit'; // última unidad elegida; se propone en los ejercicios aún sin registro
+const LB_TO_KG = 0.45359237;
 const LS_CURRENT_DAY = 'gym_current_day'; // "lunes" | "martes" | ...
 
 function loadJSON(key, fallback) {
@@ -630,6 +697,33 @@ function saveJSON(key, value) {
 }
 
 let progressData = loadJSON(LS_PROGRESS, {});
+
+// Los registros de Bloque 4 se guardaron por posición ("0", "1", ...) en vez de
+// por nombre; se renombran una sola vez para que el CSV y "última vez" los lean.
+const LEGACY_BLOQUE4 = {
+  lunes: ['Hip thrust en banco con mancuerna', 'Zancadas con mancuernas caminando', 'RDL unilateral con mancuerna', 'Curl femoral de pie unilateral en cable', 'Extensión de cuádriceps unilateral'],
+  martes: ['Press en banco declinado con mancuernas', 'Remo en T-bar', 'Press militar con mancuernas de pie', 'Jalón al pecho agarre neutro cerrado', 'Face pull con cuerda'],
+  miercoles: ['Cable crossover desde polea alta', 'Cable crossover desde polea baja', 'Remo con cable unilateral en polea baja', 'Elevaciones laterales con cable unilateral', 'Curl araña en banco inclinado', 'Press francés con mancuernas'],
+  jueves: ['Sentadilla hack en máquina', 'Press en polea baja de pie cruzado', 'Curl de bíceps en polea baja con cuerda', 'Extensión de tríceps sobre cabeza con cuerda', 'Rueda abdominal', 'Pallof press en polea', 'Dead bug'],
+  viernes: ['Press en máquina convergente', 'Remo en polea alta agarre supino', 'Zancada estática con mancuernas', 'Elevaciones laterales en cable', 'Pallof press en polea', 'Caminata inclinada'],
+};
+(function migrateLegacyKeys() {
+  let changed = false;
+  Object.values(progressData).forEach((days) => {
+    Object.keys(days || {}).forEach((dayKey) => {
+      const dayEntry = days[dayKey] || {};
+      Object.keys(dayEntry).forEach((key) => {
+        if (!/^\d+$/.test(key)) return;
+        const name = (LEGACY_BLOQUE4[dayKey] || [])[Number(key)];
+        if (!name || dayEntry[name]) return;
+        dayEntry[name] = dayEntry[key];
+        delete dayEntry[key];
+        changed = true;
+      });
+    });
+  });
+  if (changed) saveJSON(LS_PROGRESS, progressData);
+})();
 
 /* ======================================================================
    UTILIDADES DE FECHA
@@ -663,18 +757,23 @@ function mondayOfWeek(d) {
 /* ======================================================================
    ESTADO DE NAVEGACIÓN
    ====================================================================== */
-let currentDay = loadJSON(LS_CURRENT_DAY, null);
-if (!currentDay || !ROUTINE.dias[currentDay]) {
-  const wd = weekdayKeyForDate(new Date());
-  currentDay = ROUTINE.dias[wd] ? wd : 'lunes';
+// Al abrir la app se muestra el día de hoy; en fin de semana, el último visto.
+let currentDay = weekdayKeyForDate(new Date());
+if (!ROUTINE.dias[currentDay]) currentDay = loadJSON(LS_CURRENT_DAY, null);
+if (!ROUTINE.dias[currentDay]) currentDay = 'lunes';
+
+let weekOffset = 0; // 0 = semana en curso, -1 = la anterior, ...
+
+function viewedMonday() {
+  const monday = mondayOfWeek(new Date());
+  monday.setDate(monday.getDate() + weekOffset * 7);
+  return monday;
 }
 function logDateForDay(dayKey) {
-  // cada chip de día corresponde a la fecha de esa jornada en la semana actual,
-  // no a la fecha de hoy, para poder ver/editar un día ya realizado
-  const idx = ROUTINE.order.indexOf(dayKey);
-  const monday = mondayOfWeek(new Date());
-  const date = new Date(monday);
-  date.setDate(monday.getDate() + idx);
+  // cada chip de día corresponde a la fecha de esa jornada en la semana que se
+  // está viendo, no a la fecha de hoy, para poder ver/editar un día ya realizado
+  const date = viewedMonday();
+  date.setDate(date.getDate() + ROUTINE.order.indexOf(dayKey));
   return isoFromDate(date);
 }
 
@@ -692,18 +791,59 @@ function getDayEntry(dateISO, dayKey, create) {
   }
   return progressData[dateISO][dayKey];
 }
-function getSetState(dateISO, dayKey, exKey, setIndex) {
+const SIDES = [{ field: 'sets', tag: 'D' }, { field: 'setsI', tag: 'I' }];
+function sidesFor(ex) {
+  return ex.uni ? SIDES : [SIDES[0]];
+}
+function getSetState(dateISO, dayKey, exKey, setIndex, field = 'sets') {
   const dayEntry = getDayEntry(dateISO, dayKey, false);
   const ex = dayEntry && dayEntry[exKey];
-  const set = ex && ex.sets && ex.sets[setIndex];
+  const set = ex && ex[field] && ex[field][setIndex];
   return set || { kg: '', reps: '', done: false };
 }
-function setSetState(dateISO, dayKey, exKey, setIndex, patch) {
+function setSetState(dateISO, dayKey, exKey, setIndex, patch, field = 'sets') {
+  const dayEntry = getDayEntry(dateISO, dayKey, true);
+  if (!dayEntry[exKey]) dayEntry[exKey] = { sets: [], unit: defaultUnit };
+  const entry = dayEntry[exKey];
+  if (!entry[field]) entry[field] = [];
+  if (!entry[field][setIndex]) entry[field][setIndex] = { kg: '', reps: '', done: false };
+  Object.assign(entry[field][setIndex], patch);
+  saveJSON(LS_PROGRESS, progressData);
+}
+let defaultUnit = loadJSON(LS_UNIT, 'kg') === 'lb' ? 'lb' : 'kg';
+function getUnit(dateISO, dayKey, exKey) {
+  const dayEntry = getDayEntry(dateISO, dayKey, false);
+  const entry = dayEntry && dayEntry[exKey];
+  return entry ? (entry.unit || 'kg') : defaultUnit;
+}
+function setUnit(dateISO, dayKey, exKey, unit) {
   const dayEntry = getDayEntry(dateISO, dayKey, true);
   if (!dayEntry[exKey]) dayEntry[exKey] = { sets: [] };
-  if (!dayEntry[exKey].sets[setIndex]) dayEntry[exKey].sets[setIndex] = { kg: '', reps: '', done: false };
-  Object.assign(dayEntry[exKey].sets[setIndex], patch);
+  dayEntry[exKey].unit = unit;
+  defaultUnit = unit;
+  saveJSON(LS_UNIT, unit);
   saveJSON(LS_PROGRESS, progressData);
+}
+function toKg(value, unit) {
+  const n = parseFloat(value);
+  if (isNaN(n)) return '';
+  return unit === 'lb' ? Math.round(n * LB_TO_KG * 100) / 100 : n;
+}
+// Pasa un peso de una unidad a otra, redondeado a pasos reales de pesa (0.5 kg / 1 lb).
+function convertWeight(value, from, to) {
+  const n = parseFloat(value);
+  if (isNaN(n) || from === to) return value;
+  return String(to === 'kg' ? Math.round(n * LB_TO_KG * 2) / 2 : Math.round(n / LB_TO_KG));
+}
+// Una serie unilateral cuenta como hecha cuando están marcados ambos lados.
+function isSeriesDone(dateISO, dayKey, ex, setIndex) {
+  return sidesFor(ex).every((sd) => getSetState(dateISO, dayKey, ex.nombre, setIndex, sd.field).done);
+}
+function doneSetsText(sets, unit) {
+  return (sets || [])
+    .filter((s) => s && s.done)
+    .map((s) => (s.kg ? `${s.kg}${unit}×${s.reps || '?'}` : `${s.reps || '?'}`))
+    .join(' · ');
 }
 
 // Busca la sesión anterior más reciente (en cualquier día) donde este
@@ -717,13 +857,16 @@ function findLastTime(exName, logDate) {
   for (const d of dates) {
     const dayEntries = progressData[d] || {};
     for (const dk of Object.keys(dayEntries)) {
-      const entry = dayEntries[dk][exName];
-      if (entry && entry.sets && entry.sets.some((s) => s.done)) {
-        const parts = entry.sets
-          .filter((s) => s.done)
-          .map((s) => (s.kg ? `${s.kg}kg×${s.reps || '?'}` : `${s.reps || '?'}`));
-        return { date: d, text: parts.join(' · ') };
-      }
+      const entry = dayEntries[dk] && dayEntries[dk][exName];
+      if (!entry) continue;
+      const unit = entry.unit || 'kg';
+      const right = doneSetsText(entry.sets, unit);
+      const left = doneSetsText(entry.setsI, unit);
+      if (!right && !left) continue;
+      const html = left
+        ? `<br>D: <strong>${right || '—'}</strong><br>I: <strong>${left}</strong>`
+        : ` <strong>${right}</strong>`;
+      return { date: d, entry, unit, html };
     }
   }
   return null;
@@ -759,7 +902,7 @@ function computeDayProgress(dateISO, dayKey) {
   dia.ejercicios.forEach((ex) => {
     for (let s = 0; s < ex.sets; s++) {
       total++;
-      if (getSetState(dateISO, dayKey, ex.nombre, s).done) done++;
+      if (isSeriesDone(dateISO, dayKey, ex, s)) done++;
     }
   });
   return { total, done };
@@ -773,11 +916,21 @@ function renderProgressBar() {
   progressPctEl.textContent = pct + '%';
 }
 
+function restLabel(sec) {
+  if (sec < 60) return `${sec}s`;
+  const rem = sec % 60;
+  return `${Math.floor(sec / 60)}${rem ? ':' + String(rem).padStart(2, '0') : ''} min`;
+}
+
 function renderExerciseList() {
   exerciseListEl.innerHTML = '';
   const dia = ROUTINE.dias[currentDay];
   const logDate = logDateForDay(currentDay);
-  document.getElementById('header-subtitle').textContent = `${DAY_LABELS[currentDay]} · ${dia.nombre}`;
+  document.getElementById('header-subtitle').textContent = `${DAY_LABELS[currentDay]} ${ddmmFromISO(logDate)} · ${dia.nombre}`;
+
+  const banner = document.getElementById('week-banner');
+  banner.style.display = weekOffset ? 'flex' : 'none';
+  document.getElementById('week-banner-text').textContent = `Semana del ${ddmmFromISO(isoFromDate(viewedMonday()))}`;
 
   dia.ejercicios.forEach((ex) => {
     const card = document.createElement('div');
@@ -785,53 +938,85 @@ function renderExerciseList() {
 
     const last = findLastTime(ex.nombre, logDate);
     const noteHtml = ex.nota ? `<div class="exercise-note">${ex.nota}</div>` : '';
+    const restHtml = ex.restSec ? ` · descanso ${restLabel(ex.restSec)}` : '';
+
+    const unit = getUnit(logDate, currentDay, ex.nombre);
 
     card.innerHTML = `
-      <div class="exercise-title">${ex.nombre}</div>
-      <div class="exercise-meta">${ex.sets}×${ex.repsLabel} · descanso ${ex.restSec >= 60 ? Math.round(ex.restSec/60)+'min' : ex.restSec+'s'}</div>
+      <div class="exercise-head">
+        <div>
+          <div class="exercise-title">${ex.nombre}</div>
+          <div class="exercise-meta">${ex.sets}×${ex.repsLabel}${restHtml}</div>
+        </div>
+        <button class="unit-toggle" aria-label="Cambiar entre kilos y libras">
+          <span class="${unit === 'kg' ? 'on' : ''}">kg</span><span class="${unit === 'lb' ? 'on' : ''}">lb</span>
+        </button>
+      </div>
       ${noteHtml}
-      <div class="exercise-last">${last ? `Última vez ${ddmmFromISO(last.date)}: <strong>${last.text}</strong>` : 'Sin registro previo'}</div>
+      <div class="exercise-last">${last ? `Última vez ${ddmmFromISO(last.date)}:${last.html}` : 'Sin registro previo'}</div>
       <div class="sets-container"></div>
     `;
 
+    card.querySelector('.unit-toggle').addEventListener('click', () => {
+      setUnit(logDate, currentDay, ex.nombre, unit === 'kg' ? 'lb' : 'kg');
+      renderExerciseList();
+    });
+
     const setsContainer = card.querySelector('.sets-container');
+    const sides = sidesFor(ex);
     for (let s = 0; s < ex.sets; s++) {
-      const state = getSetState(logDate, currentDay, ex.nombre, s);
-      const row = document.createElement('div');
-      row.className = 'set-row';
-      row.innerHTML = `
-        <div class="set-num">${s + 1}</div>
-        <input type="number" inputmode="decimal" placeholder="kg" value="${state.kg || ''}">
-        <input type="number" inputmode="numeric" placeholder="reps" value="${state.reps || ''}">
-        <button class="check-btn${state.done ? ' done' : ''}">${state.done ? '✓' : ''}</button>
-      `;
-      const [kgInput, repsInput] = row.querySelectorAll('input');
-      const checkBtn = row.querySelector('.check-btn');
+      sides.forEach((side, sideIdx) => {
+        const state = getSetState(logDate, currentDay, ex.nombre, s, side.field);
+        // valores de la sesión anterior: se muestran como guía y se usan al marcar ✓ sin escribir nada
+        const prevSets = last && (last.entry[side.field] || last.entry.sets);
+        const prevSet = (prevSets && prevSets[s] && prevSets[s].done) ? prevSets[s] : null;
+        const prev = prevSet && { kg: convertWeight(prevSet.kg, last.unit, unit), reps: prevSet.reps };
 
-      kgInput.addEventListener('input', () => {
-        setSetState(logDate, currentDay, ex.nombre, s, { kg: kgInput.value });
-      });
-      repsInput.addEventListener('input', () => {
-        setSetState(logDate, currentDay, ex.nombre, s, { reps: repsInput.value });
-      });
-      checkBtn.addEventListener('click', () => {
-        const cur = getSetState(logDate, currentDay, ex.nombre, s);
-        const willBeDone = !cur.done;
-        setSetState(logDate, currentDay, ex.nombre, s, { done: willBeDone });
-        checkBtn.classList.toggle('done', willBeDone);
-        checkBtn.textContent = willBeDone ? '✓' : '';
-        renderProgressBar();
-        if (willBeDone && ex.restSec > 0) {
-          startRestTimer(ex.restSec, ex.nombre);
-        }
-      });
+        const row = document.createElement('div');
+        row.className = 'set-row' + (ex.uni ? ' uni' : '') + (ex.uni && sideIdx === sides.length - 1 ? ' side-last' : '');
+        row.innerHTML = `
+          <div class="set-num">${s + 1}${ex.uni ? ' ' + side.tag : ''}</div>
+          <input type="number" inputmode="decimal" placeholder="${(prev && prev.kg) || unit}" value="${state.kg || ''}">
+          <input type="number" inputmode="numeric" placeholder="${(prev && prev.reps) || 'reps'}" value="${state.reps || ''}">
+          <button class="check-btn${state.done ? ' done' : ''}" aria-label="Marcar serie">${state.done ? '✓' : ''}</button>
+        `;
+        const [kgInput, repsInput] = row.querySelectorAll('input');
+        const checkBtn = row.querySelector('.check-btn');
 
-      setsContainer.appendChild(row);
+        kgInput.addEventListener('input', () => {
+          setSetState(logDate, currentDay, ex.nombre, s, { kg: kgInput.value }, side.field);
+        });
+        repsInput.addEventListener('input', () => {
+          setSetState(logDate, currentDay, ex.nombre, s, { reps: repsInput.value }, side.field);
+        });
+        checkBtn.addEventListener('click', () => {
+          const willBeDone = !getSetState(logDate, currentDay, ex.nombre, s, side.field).done;
+          const patch = { done: willBeDone };
+          if (willBeDone && prev) {
+            if (!kgInput.value && prev.kg) { kgInput.value = prev.kg; patch.kg = prev.kg; }
+            if (!repsInput.value && prev.reps) { repsInput.value = prev.reps; patch.reps = prev.reps; }
+          }
+          setSetState(logDate, currentDay, ex.nombre, s, patch, side.field);
+          checkBtn.classList.toggle('done', willBeDone);
+          checkBtn.textContent = willBeDone ? '✓' : '';
+          renderProgressBar();
+          if (willBeDone && ex.restSec > 0 && isSeriesDone(logDate, currentDay, ex, s)) {
+            startRestTimer(ex.restSec, ex.nombre);
+          }
+        });
+
+        setsContainer.appendChild(row);
+      });
     }
 
     exerciseListEl.appendChild(card);
   });
 }
+
+document.getElementById('week-banner-back').addEventListener('click', () => {
+  weekOffset = 0;
+  renderDayView();
+});
 
 function renderDayView() {
   renderDayChips();
@@ -952,23 +1137,32 @@ function playBeep() {
    ====================================================================== */
 const weekListEl = document.getElementById('week-list');
 
+function openDay(dayKey) {
+  currentDay = dayKey;
+  saveJSON(LS_CURRENT_DAY, currentDay);
+  document.querySelector('.tab-btn[data-view="view-day"]').click();
+}
+
 function renderWeekView() {
   weekListEl.innerHTML = '';
-  const monday = mondayOfWeek(new Date());
-  ROUTINE.order.forEach((dayKey, i) => {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + i);
-    const dateISO = isoFromDate(date);
+  const monday = viewedMonday();
+  const today = todayISO();
+  document.getElementById('week-nav-label').textContent =
+    weekOffset ? `Semana del ${ddmmFromISO(isoFromDate(monday))}` : 'Esta semana';
+  document.getElementById('week-next').disabled = weekOffset >= 0;
+
+  ROUTINE.order.forEach((dayKey) => {
+    const dateISO = logDateForDay(dayKey);
     const { total, done } = computeDayProgress(dateISO, dayKey);
     const pct = total ? Math.round((done / total) * 100) : 0;
 
     const card = document.createElement('div');
-    card.className = 'week-card';
+    card.className = 'week-card' + (dateISO === today ? ' today' : '');
     const r = 20, c = 2 * Math.PI * r;
     const offset = c - (c * pct) / 100;
     card.innerHTML = `
       <div class="info">
-        <div class="day-name">${DAY_LABELS[dayKey]}</div>
+        <div class="day-name">${DAY_LABELS[dayKey]}${dateISO === today ? ' · hoy' : ''}</div>
         <div class="day-focus">${ROUTINE.dias[dayKey].nombre} · ${ddmmFromISO(dateISO)}</div>
       </div>
       <div class="week-ring">
@@ -980,9 +1174,21 @@ function renderWeekView() {
         <div class="pct">${pct}%</div>
       </div>
     `;
+    card.addEventListener('click', () => openDay(dayKey));
     weekListEl.appendChild(card);
   });
+
+  const b = ROUTINE.bloque;
+  document.getElementById('block-info').innerHTML = `
+    <summary>${b.nombre} · reglas del bloque</summary>
+    <p>${b.version}</p>
+    <p>${b.objetivo}</p>
+    <ul>${b.reglas.map((r) => `<li>${r}</li>`).join('')}</ul>
+  `;
 }
+
+document.getElementById('week-prev').addEventListener('click', () => { weekOffset--; renderWeekView(); });
+document.getElementById('week-next').addEventListener('click', () => { if (weekOffset < 0) weekOffset++; renderWeekView(); });
 
 /* ======================================================================
    DESCARGAR PROGRESO (CSV)
@@ -995,17 +1201,19 @@ function csvField(value) {
 }
 
 function buildProgressCSV() {
-  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps']];
+  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps', 'lado']];
   Object.keys(progressData).sort().forEach((dateISO) => {
     Object.keys(progressData[dateISO]).forEach((dayKey) => {
       const dayEntry = progressData[dateISO][dayKey];
       const dayLabel = DAY_LABELS[dayKey] || dayKey;
       Object.keys(dayEntry).forEach((exName) => {
-        const sets = dayEntry[exName].sets || [];
-        sets.forEach((set, i) => {
-          if (!set.done) return;
-          rows.push([dateISO, dayLabel, exName, i + 1, set.kg || '', set.reps || '']);
+        const entry = dayEntry[exName] || {};
+        const push = (sets, lado) => (sets || []).forEach((set, i) => {
+          if (!set || !set.done) return;
+          rows.push([dateISO, dayLabel, exName, i + 1, toKg(set.kg, entry.unit), set.reps || '', lado]);
         });
+        push(entry.sets, entry.setsI ? 'derecho' : '');
+        push(entry.setsI, 'izquierdo');
       });
     });
   });
