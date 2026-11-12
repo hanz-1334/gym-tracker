@@ -485,6 +485,7 @@
   .warm-row .n { font-size: 14px; font-weight: 700; color: var(--text); }
   .warm-row .r { font-size: 12px; font-weight: 600; color: var(--gold); margin-top: 1px; }
   .warm-row .c { font-size: 12px; color: var(--text-dim); line-height: 1.4; margin-top: 3px; }
+  .app-version { text-align: center; font-size: 12px; color: var(--text-dim); padding: 4px 0 12px; }
   .autosave-note { text-align: center; font-size: 12px; color: var(--text-dim); padding: 6px 0 10px; }
 
   /* ---------- Resumen (tiles) ---------- */
@@ -694,6 +695,7 @@
       <button class="btn" id="routine-reset">Volver a la rutina incluida</button>
     </div>
   </div>
+  <div class="app-version" id="app-version"></div>
 </section>
 
 <!-- ================= BARRA DE DESCANSO ================= -->
@@ -728,77 +730,106 @@
    Forma de cada ejercicio:
    { nombre, sets: <num. de series>, repsLabel: <texto a mostrar, ej "6-8" o "10/pierna">,
      restSec: <segundos de descanso entre series>, uni: <true si se registra por lado>,
-     nota: <texto técnico> }
+     nota: <texto técnico>, ss: <letra de superserie o ''>, warm: <true si es calentamiento> }
+   Cada día puede llevar `duracion` (minutos estimados).
    ====================================================================== */
 const DEFAULT_ROUTINE = {
   bloque: {
-    nombre: 'Bloque 5',
-    version: 'v2 · ajustes del 11 nov 2026',
-    objetivo: 'Recomposición corporal: físico denso, seco, atlético.',
-    reglas: [
-      'Doble progresión: primero sube reps hasta el tope del rango en todas las series; solo entonces sube carga.',
-      'Sube 2-5% después de 2 semanas consecutivas limpias (sin caída de reps). Si el siguiente escalón de mancuerna es mayor a 5%, sigue sumando reps.',
-      'No subas carga en más de un ejercicio pesado por sesión.',
-      'Descansos obligatorios por ejercicio.',
-      'Unilaterales: se registran por lado (D = derecho, I = izquierdo).',
-      'Sin patrón squat, sin peso muerto convencional bilateral, sin abdomen colgado.',
-    ],
+    "nombre": "Bloque 5",
+    "version": "2.2 - revision con fuentes (11 nov 2026)",
+    "objetivo": "Recomposición corporal - físico denso, seco, atlético (referencia: Iggy Pop realista)",
+    "reglas": [
+      "Progresion: doble progresión: primero subir reps hasta el tope del rango en todas las series; solo entonces subir carga. Incremento de 2-5% después de 2 semanas consecutivas limpias (sin caída de reps). Si el siguiente escalón de mancuerna es mayor a 5%, seguir sumando reps en vez de cambiar de mancuerna. En laterales, subir a la siguiente mancuerna solo al llegar a ~20 reps limpias. Extension de triceps por encima de la cabeza: usar cargas ~35% mas ligeras que en pushdown",
+      "Descansos: obligatorios por ejercicio, definidos en segundos",
+      "Registro: ejercicios unilaterales se registran por lado, una fila por serie y por lado (derecho / izquierdo)",
+      "Exclusiones: patrón squat / sentadilla libre o guiada de pie (genera fatiga/agitación desproporcionada); peso muerto convencional bilateral (antecedente lumbar; RDL unilateral sí permitido); ejercicios de abdomen colgado (solo variantes en suelo o cable)",
+      "Orden: compuestos primero dentro de cada sesión; aislamiento después",
+      "Salto de carga: no subir carga en más de un ejercicio pesado por sesión",
+      "Duracion maxima min: 60",
+      "Superseries: Ejercicios con el mismo grupo 'superserie' se alternan (A1, A2, A1, A2...). El descanso_seg indica el descanso tras completar el par. Si el equipo esta ocupado, hacer series corridas con el mismo descanso.",
+      "Postura: Pelvis neutra/ligeramente posterior y costillas abajo; no arquear la lumbar al terminar la repeticion. Mantener volumen de jalon/remo >= empuje. Los ejercicios de calentamiento son activacion: no hay evidencia verificada de que corrijan la postura por si solos; si el dolor lumbar persiste, consultar a un fisioterapeuta."
+    ]
   },
-  order: ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'],
+  order: ["lunes","martes","miercoles","jueves","viernes"],
   dias: {
     lunes: {
-      nombre: 'Fuerza Lower Body',
+      nombre: "Fuerza Lower Body - bisagra de cadera y unilateral, sin patrón squat",
+      duracion: 53,
       ejercicios: [
-        { nombre: 'Peso muerto rumano a una pierna con kettlebell', sets: 4, repsLabel: '8/pierna', restSec: 120, uni: true, nota: 'Rodilla de apoyo semi-flexionada, torso casi paralelo al piso.' },
-        { nombre: 'Prensa de piernas', sets: 4, repsLabel: '10', restSec: 120, nota: 'Pies altos en la plataforma, énfasis en glúteo/isquios, espalda baja pegada al respaldo.' },
-        { nombre: 'Step-up con mancuernas', sets: 4, repsLabel: '10/pierna', restSec: 90, uni: true, nota: 'Banco a la altura donde la rodilla queda a 90°, empuja con el talón del pie que sube.' },
-        { nombre: 'Hip thrust a una pierna', sets: 3, repsLabel: '10/pierna', restSec: 90, uni: true, nota: 'Progresión desde el bilateral de Bloque 4.' },
-        { nombre: 'Curl femoral tumbado (máquina)', sets: 4, repsLabel: '12', restSec: 75, nota: 'Squeeze arriba, baja controlado.' },
-        { nombre: 'Extensión de cuádriceps bilateral', sets: 3, repsLabel: '15', restSec: 60, nota: 'Controlado, sin rebote.' },
+        {"nombre":"Estiramiento de flexor de cadera en rodilla","sets":1,"repsLabel":"30 s/lado","restSec":0,"uni":false,"nota":"Rodilla atras en el piso, abdomen firme y pelvis nivelada, aprieta el gluteo de la pierna de atras y avanza la cadera sin arquear la lumbar","ss":"","warm":true},
+        {"nombre":"Puente de gluteo con inclinacion pelvica posterior","sets":1,"repsLabel":"12","restSec":0,"uni":false,"nota":"Costillas abajo, sube con gluteo, pausa 1 s arriba","ss":"","warm":true},
+        {"nombre":"Dead bug (calentamiento)","sets":1,"repsLabel":"6/lado","restSec":0,"uni":false,"nota":"Lumbar en contacto con el piso, respiracion continua, talon y mano solo rozan el piso; si no puedes mantener la lumbar, apoya manos y pies","ss":"","warm":true},
+        {"nombre":"Wall angels","sets":1,"repsLabel":"10","restSec":0,"uni":false,"nota":"Espalda, cabeza y brazos en contacto con la pared; sin arquear lumbar","ss":"","warm":true},
+        {"nombre":"Peso muerto rumano a una pierna con kettlebell","sets":4,"repsLabel":"8-10/pierna","restSec":120,"uni":true,"nota":"Rodilla de apoyo semi-flexionada, torso casi paralelo al piso; costillas abajo, sin arquear la lumbar al subir","ss":"","warm":false},
+        {"nombre":"Prensa de piernas","sets":4,"repsLabel":"10-12","restSec":120,"uni":false,"nota":"Pies altos y rodillas alineadas con la punta del pie; baja hasta ~90 grados o hasta donde la lumbar no se despegue del respaldo; no bloquear rodillas","ss":"","warm":false},
+        {"nombre":"Step-up con mancuernas","sets":4,"repsLabel":"10-12/pierna","restSec":90,"uni":true,"nota":"Pie completo en el cajon, muslo de trabajo ~paralelo al piso, rodilla alineada con el 2o dedo, baja controlado","ss":"","warm":false},
+        {"nombre":"Curl femoral sentado (maquina)","sets":4,"repsLabel":"10-14","restSec":60,"uni":false,"nota":"Superserie A1. Baja en 2-3 s, rodilla alineada con el eje, almohadilla del muslo fija. Si no hay maquina sentada, usar tumbado. Empezar con carga para 12 reps limpias, no arrastrar la del curl tumbado","ss":"A","warm":false},
+        {"nombre":"Extensión de cuádriceps bilateral","sets":3,"repsLabel":"12-15","restSec":60,"uni":false,"nota":"Superserie A2. Controlado, sin rebote","ss":"A","warm":false},
       ],
     },
     martes: {
-      nombre: 'Fuerza Upper Body',
+      nombre: "Fuerza Upper Body + pieza de brazo repartida",
+      duracion: 46,
       ejercicios: [
-        { nombre: 'Press inclinado con mancuernas', sets: 5, repsLabel: '5-6', restSec: 150, nota: 'Ángulo 30°, control en bajada.' },
-        { nombre: 'Remo con barra agarre prono', sets: 5, repsLabel: '5-6', restSec: 150, nota: 'Torso a 45°, tira hacia el ombligo.' },
-        { nombre: 'Press Arnold con mancuernas', sets: 4, repsLabel: '8', restSec: 120, nota: 'Rotación completa, controla el descenso.' },
-        { nombre: 'Jalón al pecho agarre supino', sets: 4, repsLabel: '8-10', restSec: 90, nota: 'Codos hacia abajo, squeeze 1 seg.' },
-        { nombre: 'Face pull con banda', sets: 3, repsLabel: '15', restSec: 60, nota: 'Codos altos.' },
-        { nombre: 'Curl martillo con mancuernas', sets: 3, repsLabel: '12', restSec: 60, nota: 'Pieza de brazo repartida del día.' },
+        {"nombre":"Estiramiento de flexor de cadera en rodilla","sets":1,"repsLabel":"30 s/lado","restSec":0,"uni":false,"nota":"Rodilla atras en el piso, abdomen firme y pelvis nivelada, aprieta el gluteo de la pierna de atras y avanza la cadera sin arquear la lumbar","ss":"","warm":true},
+        {"nombre":"Puente de gluteo con inclinacion pelvica posterior","sets":1,"repsLabel":"12","restSec":0,"uni":false,"nota":"Costillas abajo, sube con gluteo, pausa 1 s arriba","ss":"","warm":true},
+        {"nombre":"Dead bug (calentamiento)","sets":1,"repsLabel":"6/lado","restSec":0,"uni":false,"nota":"Lumbar en contacto con el piso, respiracion continua, talon y mano solo rozan el piso; si no puedes mantener la lumbar, apoya manos y pies","ss":"","warm":true},
+        {"nombre":"Wall angels","sets":1,"repsLabel":"10","restSec":0,"uni":false,"nota":"Espalda, cabeza y brazos en contacto con la pared; sin arquear lumbar","ss":"","warm":true},
+        {"nombre":"Press inclinado con mancuernas","sets":5,"repsLabel":"5-6","restSec":150,"uni":false,"nota":"Ángulo 30°, control en bajada","ss":"A","warm":false},
+        {"nombre":"Remo con barra agarre prono","sets":5,"repsLabel":"5-6","restSec":150,"uni":false,"nota":"Torso a 45°, tira hacia el ombligo","ss":"A","warm":false},
+        {"nombre":"Press Arnold con mancuernas","sets":4,"repsLabel":"8-10","restSec":90,"uni":false,"nota":"Rotación completa, controla el descenso","ss":"B","warm":false},
+        {"nombre":"Jalón al pecho agarre supino","sets":4,"repsLabel":"8-10","restSec":90,"uni":false,"nota":"Codos hacia abajo, squeeze 1 seg","ss":"B","warm":false},
+        {"nombre":"Face pull con banda","sets":3,"repsLabel":"15-20","restSec":60,"uni":false,"nota":"Superserie C1. Codos altos y abiertos, termina con las manos giradas hacia atras, sin inclinarte hacia atras","ss":"C","warm":false},
+        {"nombre":"Curl martillo con mancuernas","sets":3,"repsLabel":"10-14","restSec":60,"uni":false,"nota":"Pieza de brazo repartida del día","ss":"C","warm":false},
       ],
     },
     miercoles: {
-      nombre: 'Hipertrofia Upper Body',
+      nombre: "Hipertrofia Upper Body",
+      duracion: 46,
       ejercicios: [
-        { nombre: 'Press en máquina convergente', sets: 4, repsLabel: '12-15', restSec: 75, nota: '' },
-        { nombre: 'Remo en máquina agarre neutro', sets: 4, repsLabel: '12-15', restSec: 75, nota: '' },
-        { nombre: 'Elevaciones laterales con mancuerna', sets: 5, repsLabel: '15', restSec: 60, nota: 'Sin balanceo.' },
-        { nombre: 'Curl con barra Z', sets: 4, repsLabel: '10-12', restSec: 75, nota: '' },
-        { nombre: 'Extensión de tríceps en polea, barra recta', sets: 4, repsLabel: '10-12', restSec: 75, nota: '' },
-        { nombre: 'Extensión de tríceps unilateral con mancuerna sobre banco', sets: 3, repsLabel: '12/brazo', restSec: 60, uni: true, nota: '' },
+        {"nombre":"Estiramiento de flexor de cadera en rodilla","sets":1,"repsLabel":"30 s/lado","restSec":0,"uni":false,"nota":"Rodilla atras en el piso, abdomen firme y pelvis nivelada, aprieta el gluteo de la pierna de atras y avanza la cadera sin arquear la lumbar","ss":"","warm":true},
+        {"nombre":"Puente de gluteo con inclinacion pelvica posterior","sets":1,"repsLabel":"12","restSec":0,"uni":false,"nota":"Costillas abajo, sube con gluteo, pausa 1 s arriba","ss":"","warm":true},
+        {"nombre":"Dead bug (calentamiento)","sets":1,"repsLabel":"6/lado","restSec":0,"uni":false,"nota":"Lumbar en contacto con el piso, respiracion continua, talon y mano solo rozan el piso; si no puedes mantener la lumbar, apoya manos y pies","ss":"","warm":true},
+        {"nombre":"Wall angels","sets":1,"repsLabel":"10","restSec":0,"uni":false,"nota":"Espalda, cabeza y brazos en contacto con la pared; sin arquear lumbar","ss":"","warm":true},
+        {"nombre":"Press en máquina convergente","sets":4,"repsLabel":"12-15","restSec":75,"uni":false,"nota":"","ss":"A","warm":false},
+        {"nombre":"Remo en máquina agarre neutro","sets":4,"repsLabel":"12-15","restSec":75,"uni":false,"nota":"","ss":"A","warm":false},
+        {"nombre":"Elevaciones laterales con mancuerna","sets":5,"repsLabel":"15-20","restSec":60,"uni":false,"nota":"Sin balanceo","ss":"","warm":false},
+        {"nombre":"Curl con barra Z","sets":4,"repsLabel":"10-12","restSec":75,"uni":false,"nota":"","ss":"B","warm":false},
+        {"nombre":"Extensión de tríceps en polea, barra recta","sets":4,"repsLabel":"10-12","restSec":75,"uni":false,"nota":"","ss":"B","warm":false},
+        {"nombre":"Extensión de tríceps por encima de la cabeza con mancuerna","sets":3,"repsLabel":"10-12","restSec":75,"uni":false,"nota":"A dos manos, sentado con respaldo; codos cerca de la cabeza, baja hasta un estiramiento profundo, sin arquear la lumbar. Carga ~35% menor que el pushdown","ss":"","warm":false},
       ],
     },
     jueves: {
-      nombre: 'Brazo (énfasis fuerte) + Core',
+      nombre: "Brazo (énfasis fuerte) + Core",
+      duracion: 52,
       ejercicios: [
-        { nombre: 'Press cerrado en banca (close-grip)', sets: 4, repsLabel: '10', restSec: 90, nota: 'Primer ejercicio del día (compuesto). Carga base 32 kg; no subir hasta 2 semanas limpias.' },
-        { nombre: 'Curl inclinado con mancuernas', sets: 3, repsLabel: '10-12', restSec: 75, nota: 'Banco inclinado, brazos colgando detrás del torso para estirar el bíceps; empieza con la carga que permita 10 reps limpias.' },
-        { nombre: 'Curl concentrado con mancuerna', sets: 3, repsLabel: '12/brazo', restSec: 60, uni: true, nota: 'Codo apoyado, pico de contracción.' },
-        { nombre: 'Extensión de tríceps unilateral en polea', sets: 3, repsLabel: '15/brazo', restSec: 60, uni: true, nota: '' },
-        { nombre: 'Rueda abdominal', sets: 3, repsLabel: '10-12', restSec: 75, nota: 'Rango máximo sin perder la lumbar; si las series 2-3 caen por debajo de 8 reps, cambia por crunch en polea.' },
-        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 60, uni: true, nota: 'Antirrotación, 1 seg extendido.' },
+        {"nombre":"Estiramiento de flexor de cadera en rodilla","sets":1,"repsLabel":"30 s/lado","restSec":0,"uni":false,"nota":"Rodilla atras en el piso, abdomen firme y pelvis nivelada, aprieta el gluteo de la pierna de atras y avanza la cadera sin arquear la lumbar","ss":"","warm":true},
+        {"nombre":"Puente de gluteo con inclinacion pelvica posterior","sets":1,"repsLabel":"12","restSec":0,"uni":false,"nota":"Costillas abajo, sube con gluteo, pausa 1 s arriba","ss":"","warm":true},
+        {"nombre":"Dead bug (calentamiento)","sets":1,"repsLabel":"6/lado","restSec":0,"uni":false,"nota":"Lumbar en contacto con el piso, respiracion continua, talon y mano solo rozan el piso; si no puedes mantener la lumbar, apoya manos y pies","ss":"","warm":true},
+        {"nombre":"Wall angels","sets":1,"repsLabel":"10","restSec":0,"uni":false,"nota":"Espalda, cabeza y brazos en contacto con la pared; sin arquear lumbar","ss":"","warm":true},
+        {"nombre":"Press cerrado en banca (close-grip)","sets":4,"repsLabel":"8-10","restSec":90,"uni":false,"nota":"Primer ejercicio del día (compuesto). Carga base 32 kg; no subir hasta 2 semanas limpias","ss":"","warm":false},
+        {"nombre":"Curl inclinado con mancuernas","sets":3,"repsLabel":"10-12","restSec":75,"uni":false,"nota":"Banco inclinado, brazos colgando detrás del torso para estirar el bíceps; empezar con la carga que permita 10 reps limpias","ss":"","warm":false},
+        {"nombre":"Curl concentrado con mancuerna","sets":3,"repsLabel":"10-14/brazo","restSec":60,"uni":true,"nota":"Codo apoyado, pico de contracción","ss":"","warm":false},
+        {"nombre":"Extensión de tríceps por encima de la cabeza en polea (a un brazo)","sets":3,"repsLabel":"12-15/brazo","restSec":75,"uni":true,"nota":"Polea de espaldas, codo cerca de la cabeza, estiramiento profundo, sin arquear la lumbar","ss":"","warm":false},
+        {"nombre":"Dead bug con control (core)","sets":3,"repsLabel":"8-10/lado","restSec":60,"uni":true,"nota":"Hollowing suave (ombligo hacia la columna sin inspirar profundo), lumbar en contacto con el piso, talon y mano solo rozan el piso, respiracion continua. Con 3x10/lado limpio, agrega tobilleras","ss":"","warm":false},
+        {"nombre":"Pallof press en polea","sets":3,"repsLabel":"10-12/lado","restSec":60,"uni":true,"nota":"Polea a la altura del pecho, codos pegados al torso, empuja y sosten 2-3 s, regresa lento","ss":"","warm":false},
       ],
     },
     viernes: {
-      nombre: 'Metabólico Full Body',
+      nombre: "Metabólico Full Body",
+      duracion: 54,
       ejercicios: [
-        { nombre: 'Press de pecho en máquina', sets: 3, repsLabel: '15', restSec: 45, nota: '' },
-        { nombre: 'Remo en polea baja sentado', sets: 3, repsLabel: '15', restSec: 45, nota: 'Agarre cerrado (neutro), codos pegados al torso.' },
-        { nombre: 'Step-up con mancuernas (ligero)', sets: 3, repsLabel: '12/pierna', restSec: 45, uni: true, nota: 'Versión ligera: el progreso de carga va en el step-up del lunes.' },
-        { nombre: 'Elevaciones laterales con mancuerna', sets: 3, repsLabel: '15', restSec: 45, nota: '' },
-        { nombre: 'Pallof press en polea', sets: 3, repsLabel: '12/lado', restSec: 45, uni: true, nota: '' },
-        { nombre: 'Caminata inclinada', sets: 1, repsLabel: '15 min zona 2', restSec: 0, nota: '' },
+        {"nombre":"Estiramiento de flexor de cadera en rodilla","sets":1,"repsLabel":"30 s/lado","restSec":0,"uni":false,"nota":"Rodilla atras en el piso, abdomen firme y pelvis nivelada, aprieta el gluteo de la pierna de atras y avanza la cadera sin arquear la lumbar","ss":"","warm":true},
+        {"nombre":"Puente de gluteo con inclinacion pelvica posterior","sets":1,"repsLabel":"12","restSec":0,"uni":false,"nota":"Costillas abajo, sube con gluteo, pausa 1 s arriba","ss":"","warm":true},
+        {"nombre":"Dead bug (calentamiento)","sets":1,"repsLabel":"6/lado","restSec":0,"uni":false,"nota":"Lumbar en contacto con el piso, respiracion continua, talon y mano solo rozan el piso; si no puedes mantener la lumbar, apoya manos y pies","ss":"","warm":true},
+        {"nombre":"Wall angels","sets":1,"repsLabel":"10","restSec":0,"uni":false,"nota":"Espalda, cabeza y brazos en contacto con la pared; sin arquear lumbar","ss":"","warm":true},
+        {"nombre":"Press de pecho en máquina","sets":3,"repsLabel":"12-15","restSec":45,"uni":false,"nota":"","ss":"","warm":false},
+        {"nombre":"Remo en polea baja sentado","sets":3,"repsLabel":"12-15","restSec":45,"uni":false,"nota":"Agarre cerrado (neutro), codos pegados al torso","ss":"","warm":false},
+        {"nombre":"Step-up con mancuernas (ligero)","sets":3,"repsLabel":"12-15/pierna","restSec":45,"uni":true,"nota":"Versión ligera: el progreso de carga va en el step-up del lunes","ss":"","warm":false},
+        {"nombre":"Elevaciones laterales con mancuerna","sets":3,"repsLabel":"15-20","restSec":45,"uni":false,"nota":"","ss":"","warm":false},
+        {"nombre":"Face pull con banda","sets":3,"repsLabel":"15-20","restSec":45,"uni":false,"nota":"Ligero, codos altos y abiertos, manos giradas hacia atras al final","ss":"","warm":false},
+        {"nombre":"Pallof press en polea","sets":3,"repsLabel":"10-12/lado","restSec":45,"uni":true,"nota":"Sosten 2-3 s al extender","ss":"","warm":false},
+        {"nombre":"Caminata inclinada","sets":1,"repsLabel":"15 min zona 2","restSec":0,"uni":false,"nota":"","ss":"","warm":false},
       ],
     },
   },
@@ -810,6 +841,9 @@ const DAY_LABELS = {
 };
 /* ==================== FIN ZONA DE RUTINA ==================== */
 
+
+// Se muestra al final de la pestaña Datos para saber qué versión tiene el teléfono.
+const APP_VERSION = '12 nov 2026 · superseries + Bloque 5 v2.2 incluido';
 
 /* ======================================================================
    ESTADO Y PERSISTENCIA (localStorage)
@@ -2381,10 +2415,11 @@ document.addEventListener('visibilitychange', () => {
 setTimeout(() => { if (syncState.dirty) pushBackup(); }, 1500);
 
 function renderDataView() {
+  document.getElementById('app-version').textContent = `Versión de la app: ${APP_VERSION}`;
   document.getElementById('sync-script').textContent = APPS_SCRIPT_CODE;
   const b = ROUTINE.bloque || {};
   document.getElementById('routine-current').textContent =
-    `Rutina activa: ${b.nombre || 'Rutina'}${b.version ? ` (${b.version})` : ''}${ROUTINE === DEFAULT_ROUTINE ? '' : ' · pegada desde aquí'}. `
+    `Rutina activa: ${b.nombre || 'Rutina'}${b.version ? ` (${b.version})` : ''}${ROUTINE === DEFAULT_ROUTINE ? ' · incluida en la app' : ' · pegada desde aquí'}. `
     + 'Para cambiar de bloque pega su JSON; tu historial se conserva.';
   renderSyncStatus();
 }
