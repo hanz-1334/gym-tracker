@@ -444,7 +444,7 @@
   /* ---------- Tarjeta de ejercicio: plegado, avisos, notas ---------- */
   .exercise-card { scroll-margin-top: 84px; }
   .exercise-head { cursor: pointer; }
-  .exercise-summary { display: none; font-size: 12.5px; color: var(--text-dim); margin-top: 4px; }
+  .exercise-summary { white-space: pre-line; display: none; font-size: 12.5px; color: var(--text-dim); margin-top: 4px; }
   .exercise-summary::before { content: '✓ '; color: var(--ok); font-weight: 700; }
   .exercise-card.collapsed .exercise-body,
   .exercise-card.collapsed .unit-toggle { display: none; }
@@ -467,6 +467,24 @@
     color: var(--text); border-radius: 8px; padding: 10px; font-size: 16px; font-family: inherit; resize: vertical;
   }
   .exercise-user-note:focus { outline: none; border-color: var(--gold); }
+  .exercise-card.superset { border-left: 3px solid var(--gold-dim); }
+  .ss-tag {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.3px;
+    color: #13151A; background: var(--gold); border-radius: 5px; padding: 1px 5px;
+    margin-right: 6px; vertical-align: 2px;
+  }
+  .set-num .ss-tag { display: block; width: fit-content; margin: 0 auto 2px; }
+  .ss-member { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
+  .ss-member-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .ss-sets { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 4px; }
+  .set-row.ss { grid-template-columns: 40px 1fr 1fr 44px; }
+  .set-row.round-last { margin-bottom: 16px; }
+  .warm-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+  .warm-row:first-child { border-top: none; }
+  .warm-row .info { flex: 1; min-width: 0; }
+  .warm-row .n { font-size: 14px; font-weight: 700; color: var(--text); }
+  .warm-row .r { font-size: 12px; font-weight: 600; color: var(--gold); margin-top: 1px; }
+  .warm-row .c { font-size: 12px; color: var(--text-dim); line-height: 1.4; margin-top: 3px; }
   .autosave-note { text-align: center; font-size: 12px; color: var(--text-dim); padding: 6px 0 10px; }
 
   /* ---------- Resumen (tiles) ---------- */
@@ -902,6 +920,16 @@ function mondayOfWeek(d) {
   return date;
 }
 
+// Una rutina pegada se vuelve a leer desde su JSON original, así los campos que
+// la app aprenda a usar en versiones nuevas se aplican sin tener que pegarla otra vez.
+if (ROUTINE !== DEFAULT_ROUTINE && ROUTINE.source) {
+  try {
+    const reparsed = routineFromBlockJSON(ROUTINE.source);
+    reparsed.source = ROUTINE.source;
+    ROUTINE = reparsed;
+  } catch (e) { /* se queda la versión ya guardada */ }
+}
+
 /* ======================================================================
    ESTADO DE NAVEGACIÓN
    ====================================================================== */
@@ -949,7 +977,7 @@ function getEntry(dateISO, dayKey, exKey, create) {
 
 const SIDES = [{ field: 'sets', tag: 'D' }, { field: 'setsI', tag: 'I' }];
 function sidesFor(ex) {
-  return ex.uni ? SIDES : [SIDES[0]];
+  return ex.uni && !ex.warm ? SIDES : [SIDES[0]];
 }
 function getSetState(dateISO, dayKey, exKey, setIndex, field = 'sets') {
   const entry = getEntry(dateISO, dayKey, exKey, false);
@@ -1020,6 +1048,10 @@ function doneSetsText(sets, unit) {
 }
 function entryHasDone(entry) {
   return !!entry && (doneSets(entry.sets).length > 0 || doneSets(entry.setsI).length > 0);
+}
+// Al menos una serie hecha con kg o reps (el calentamiento solo se marca y no cuenta).
+function entryHasNumbers(entry) {
+  return !!entry && doneSets(entry.sets).concat(doneSets(entry.setsI)).some((s) => s.kg || s.reps);
 }
 function entryText(entry) {
   const unit = entry.unit || 'kg';
@@ -1141,7 +1173,8 @@ function renderProgressBar() {
   const { total, done } = computeDayProgress(logDateForDay(currentDay), currentDay);
   const pct = total ? Math.round((done / total) * 100) : 0;
   progressFillEl.style.width = pct + '%';
-  progressTextEl.textContent = `${done} / ${total} series`;
+  const minutes = ROUTINE.dias[currentDay].duracion;
+  progressTextEl.textContent = `${done} / ${total} series${minutes ? ` · ~${minutes} min` : ''}`;
   progressPctEl.textContent = pct + '%';
 }
 
@@ -1149,6 +1182,31 @@ function restLabel(sec) {
   if (sec < 60) return `${sec}s`;
   const rem = sec % 60;
   return `${Math.floor(sec / 60)}${rem ? ':' + String(rem).padStart(2, '0') : ''} min`;
+}
+
+// Agrupa los ejercicios del día en tarjetas: el calentamiento primero, luego
+// cada superserie (ejercicios con la misma letra) y los ejercicios sueltos, en
+// el orden en que aparece el primer ejercicio de cada tarjeta.
+function dayBlocks(exercises) {
+  const blocks = [];
+  const warm = exercises.filter((ex) => ex.warm);
+  if (warm.length) blocks.push({ type: 'warm', members: warm });
+  const letterCount = {};
+  exercises.forEach((ex) => { if (!ex.warm && ex.ss) letterCount[ex.ss] = (letterCount[ex.ss] || 0) + 1; });
+  const byLetter = {};
+  exercises.forEach((ex) => {
+    if (ex.warm) return;
+    if (ex.ss && letterCount[ex.ss] > 1) {
+      if (!byLetter[ex.ss]) {
+        byLetter[ex.ss] = { type: 'ss', letter: ex.ss, members: [] };
+        blocks.push(byLetter[ex.ss]);
+      }
+      byLetter[ex.ss].members.push(ex);
+    } else {
+      blocks.push({ type: 'single', members: [ex] });
+    }
+  });
+  return blocks;
 }
 
 function renderExerciseList() {
@@ -1162,108 +1220,230 @@ function renderExerciseList() {
   document.getElementById('week-banner-text').textContent = `Semana del ${ddmmFromISO(isoFromDate(viewedMonday()))}`;
 
   const exercises = dayExercises(logDate, currentDay);
-  exercises.forEach((ex) => {
+  dayBlocks(exercises).forEach((block) => {
     const card = document.createElement('div');
-    card.className = 'exercise-card';
+    card.className = 'exercise-card' + (block.type === 'ss' ? ' superset' : '');
 
-    const sessions = sessionsBefore(ex.nombre, logDate);
-    const last = sessions[0] || null;
-    const lastUnit = last ? (last.entry.unit || 'kg') : 'kg';
-    const unit = getUnit(logDate, currentDay, ex.nombre);
-    const hint = progressionHint(ex, sessions, unit);
-    const entryNow = getEntry(logDate, currentDay, ex.nombre, false);
-
-    const collapseKey = `${logDate}|${ex.nombre}`;
-    if (!(collapseKey in collapsedState)) collapsedState[collapseKey] = isExerciseDone(logDate, currentDay, ex);
+    const key = block.type === 'single' ? block.members[0].nombre : `${block.type}:${block.letter || ''}`;
+    const collapseKey = `${logDate}|${key}`;
+    const isBlockDone = () => block.members.every((ex) => isExerciseDone(logDate, currentDay, ex));
+    if (!(collapseKey in collapsedState)) collapsedState[collapseKey] = isBlockDone();
     card.classList.toggle('collapsed', collapsedState[collapseKey]);
 
-    let lastHtml = 'Sin registro previo';
-    if (last) {
-      const right = doneSetsText(last.entry.sets, lastUnit);
-      const left = doneSetsText(last.entry.setsI, lastUnit);
-      lastHtml = `Última vez ${ddmmFromISO(last.date)}:` + (left
-        ? `<br>D: <strong>${esc(right || '—')}</strong><br>I: <strong>${esc(left)}</strong>`
-        : ` <strong>${esc(right)}</strong>`);
-    }
-
-    card.innerHTML = `
-      <div class="exercise-head">
-        <div>
-          <div class="exercise-title">${esc(ex.nombre)}</div>
-          <div class="exercise-meta">${ex.sets}×${esc(ex.repsLabel)}${ex.restSec ? ` · descanso ${restLabel(ex.restSec)}` : ''}</div>
-          <div class="exercise-summary"></div>
-        </div>
-        <button class="unit-toggle" aria-label="Cambiar entre kilos y libras">
-          <span class="${unit === 'kg' ? 'on' : ''}">kg</span><span class="${unit === 'lb' ? 'on' : ''}">lb</span>
-        </button>
-      </div>
-      <div class="exercise-body">
-        ${ex.original ? `<div class="exercise-sub">Hoy sustituye a: ${esc(ex.original)}</div>` : ''}
-        ${ex.nota ? `<div class="exercise-note">${esc(ex.nota)}</div>` : ''}
-        <div class="exercise-last">${lastHtml}</div>
-        ${last && last.entry.nota ? `<div class="exercise-prev-note">Nota anterior: ${esc(last.entry.nota)}</div>` : ''}
-        ${hint ? `<div class="exercise-hint${hint.up ? ' up' : ''}"><b>${hint.up ? 'Sube carga' : 'Progresión'}</b>${esc(hint.text)}</div>` : ''}
-        <div class="sets-container"></div>
-        <div class="exercise-actions">
-          <button class="link-btn note-btn">Nota</button>
-          <button class="link-btn sub-btn">${ex.original ? 'Quitar sustitución' : 'Sustituir hoy'}</button>
-        </div>
-        <textarea class="exercise-user-note" rows="2" placeholder="Nota de esta sesión" style="display:none;"></textarea>
-      </div>
-    `;
+    const afterCheck = (willBeDone) => {
+      renderProgressBar();
+      if (!willBeDone || !isBlockDone()) return;
+      collapsedState[collapseKey] = true;
+      card.classList.add('collapsed');
+      updateSummary();
+      const next = card.nextElementSibling;
+      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const summary = block.type === 'warm'
+      ? buildWarmupCard(card, block, logDate, afterCheck)
+      : buildTrainingCard(card, block, logDate, exercises, afterCheck);
 
     const summaryEl = card.querySelector('.exercise-summary');
-    const updateSummary = () => {
-      const entry = getEntry(logDate, currentDay, ex.nombre, false);
-      summaryEl.textContent = entry ? entryText(entry) : '';
-    };
+    const updateSummary = () => { summaryEl.textContent = summary(); };
     updateSummary();
-
     card.querySelector('.exercise-head').addEventListener('click', () => {
       collapsedState[collapseKey] = !collapsedState[collapseKey];
       card.classList.toggle('collapsed', collapsedState[collapseKey]);
       updateSummary();
     });
-    card.querySelector('.unit-toggle').addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      setUnit(logDate, currentDay, ex.nombre, unit === 'kg' ? 'lb' : 'kg');
-      renderExerciseList();
-    });
 
-    const noteEl = card.querySelector('.exercise-user-note');
-    if (entryNow && entryNow.nota) {
-      noteEl.value = entryNow.nota;
-      noteEl.style.display = 'block';
-    }
-    card.querySelector('.note-btn').addEventListener('click', () => {
-      noteEl.style.display = 'block';
-      noteEl.focus();
-    });
-    noteEl.addEventListener('input', () => {
-      getEntry(logDate, currentDay, ex.nombre, true).nota = noteEl.value;
-      saveJSON(LS_PROGRESS, progressData);
-    });
+    exerciseListEl.appendChild(card);
+  });
+}
 
-    card.querySelector('.sub-btn').addEventListener('click', () => {
-      const routineName = ex.original || ex.nombre;
-      if (ex.original) {
-        setSubstitution(logDate, currentDay, routineName, null);
-      } else {
-        const name = (window.prompt(`Sustituir "${ex.nombre}" solo este día por:`) || '').trim();
-        if (!name) return;
-        if (exercises.some((other) => other.nombre === name)) {
-          showToast('Ese ejercicio ya está en este día');
-          return;
-        }
-        setSubstitution(logDate, currentDay, routineName, name);
+// Calentamiento: solo se marca como hecho, sin kg ni reps.
+function buildWarmupCard(card, block, logDate, afterCheck) {
+  card.innerHTML = `
+    <div class="exercise-head">
+      <div>
+        <div class="exercise-title">Calentamiento</div>
+        <div class="exercise-meta">${block.members.length} ejercicios · marca cada uno al terminarlo</div>
+        <div class="exercise-summary"></div>
+      </div>
+    </div>
+    <div class="exercise-body"></div>
+  `;
+  const body = card.querySelector('.exercise-body');
+  block.members.forEach((ex) => {
+    const done = getSetState(logDate, currentDay, ex.nombre, 0).done;
+    const row = document.createElement('div');
+    row.className = 'warm-row';
+    row.innerHTML = `
+      <div class="info">
+        <div class="n">${esc(ex.nombre)}</div>
+        <div class="r">${esc(ex.repsLabel)}</div>
+        ${ex.nota ? `<div class="c">${esc(ex.nota)}</div>` : ''}
+      </div>
+      <button class="check-btn${done ? ' done' : ''}" aria-label="Marcar ${esc(ex.nombre)}">${done ? '✓' : ''}</button>
+    `;
+    const btn = row.querySelector('.check-btn');
+    btn.addEventListener('click', () => {
+      const willBeDone = !getSetState(logDate, currentDay, ex.nombre, 0).done;
+      setSetState(logDate, currentDay, ex.nombre, 0, { done: willBeDone });
+      btn.classList.toggle('done', willBeDone);
+      btn.textContent = willBeDone ? '✓' : '';
+      afterCheck(willBeDone);
+    });
+    body.appendChild(row);
+  });
+  return () => {
+    const n = block.members.filter((ex) => isExerciseDone(logDate, currentDay, ex)).length;
+    return `${n} de ${block.members.length} hechos`;
+  };
+}
+
+function exerciseDetailsHTML(m) {
+  const { ex, last, lastUnit, hint } = m;
+  let lastHtml = 'Sin registro previo';
+  if (last) {
+    const right = doneSetsText(last.entry.sets, lastUnit);
+    const left = doneSetsText(last.entry.setsI, lastUnit);
+    lastHtml = `Última vez ${ddmmFromISO(last.date)}:` + (left
+      ? `<br>D: <strong>${esc(right || '—')}</strong><br>I: <strong>${esc(left)}</strong>`
+      : ` <strong>${esc(right)}</strong>`);
+  }
+  return `
+    ${ex.original ? `<div class="exercise-sub">Hoy sustituye a: ${esc(ex.original)}</div>` : ''}
+    ${ex.nota ? `<div class="exercise-note">${esc(ex.nota)}</div>` : ''}
+    <div class="exercise-last">${lastHtml}</div>
+    ${last && last.entry.nota ? `<div class="exercise-prev-note">Nota anterior: ${esc(last.entry.nota)}</div>` : ''}
+    ${hint ? `<div class="exercise-hint${hint.up ? ' up' : ''}"><b>${hint.up ? 'Sube carga' : 'Progresión'}</b>${esc(hint.text)}</div>` : ''}
+  `;
+}
+function exerciseActionsHTML(m) {
+  return `
+    <div class="exercise-actions">
+      <button class="link-btn note-btn">Nota</button>
+      <button class="link-btn sub-btn">${m.ex.original ? 'Quitar sustitución' : 'Sustituir hoy'}</button>
+    </div>
+    <textarea class="exercise-user-note" rows="2" placeholder="Nota de esta sesión" style="display:none;"></textarea>
+  `;
+}
+function unitToggleHTML(unit) {
+  return `<button class="unit-toggle" aria-label="Cambiar entre kilos y libras">
+    <span class="${unit === 'kg' ? 'on' : ''}">kg</span><span class="${unit === 'lb' ? 'on' : ''}">lb</span>
+  </button>`;
+}
+// Botón kg/lb, nota y sustitución de un ejercicio; `root` contiene solo los de ese ejercicio.
+function wireExerciseControls(root, m, logDate, exercises) {
+  const { ex, unit } = m;
+  root.querySelector('.unit-toggle').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    setUnit(logDate, currentDay, ex.nombre, unit === 'kg' ? 'lb' : 'kg');
+    renderExerciseList();
+  });
+
+  const noteEl = root.querySelector('.exercise-user-note');
+  const entryNow = getEntry(logDate, currentDay, ex.nombre, false);
+  if (entryNow && entryNow.nota) {
+    noteEl.value = entryNow.nota;
+    noteEl.style.display = 'block';
+  }
+  root.querySelector('.note-btn').addEventListener('click', () => {
+    noteEl.style.display = 'block';
+    noteEl.focus();
+  });
+  noteEl.addEventListener('input', () => {
+    getEntry(logDate, currentDay, ex.nombre, true).nota = noteEl.value;
+    saveJSON(LS_PROGRESS, progressData);
+  });
+
+  root.querySelector('.sub-btn').addEventListener('click', () => {
+    const routineName = ex.original || ex.nombre;
+    if (ex.original) {
+      setSubstitution(logDate, currentDay, routineName, null);
+    } else {
+      const name = (window.prompt(`Sustituir "${ex.nombre}" solo este día por:`) || '').trim();
+      if (!name) return;
+      if (exercises.some((other) => other.nombre === name)) {
+        showToast('Ese ejercicio ya está en este día');
+        return;
       }
-      renderDayView();
-    });
+      setSubstitution(logDate, currentDay, routineName, name);
+    }
+    renderDayView();
+  });
+}
 
-    const setsContainer = card.querySelector('.sets-container');
-    const sides = sidesFor(ex);
-    for (let s = 0; s < ex.sets; s++) {
+// Tarjeta de un ejercicio suelto o de una superserie. En la superserie las
+// series van intercaladas por ronda (A1, A2, A1, A2...) y el descanso empieza
+// al completar la ronda, no después de cada ejercicio.
+function buildTrainingCard(card, block, logDate, exercises, afterCheck) {
+  const isSS = block.type === 'ss';
+  const members = block.members.map((ex, i) => {
+    const sessions = sessionsBefore(ex.nombre, logDate);
+    const last = sessions[0] || null;
+    const unit = getUnit(logDate, currentDay, ex.nombre);
+    return {
+      ex, sessions, last, unit,
+      tag: isSS ? `${block.letter}${i + 1}` : '',
+      lastUnit: last ? (last.entry.unit || 'kg') : 'kg',
+      hint: progressionHint(ex, sessions, unit),
+    };
+  });
+  const rest = Math.max(...block.members.map((ex) => ex.restSec || 0));
+
+  if (isSS) {
+    card.innerHTML = `
+      <div class="exercise-head">
+        <div>
+          <div class="exercise-title">Superserie ${esc(block.letter)}</div>
+          <div class="exercise-meta">Alterna ${members.map((m) => m.tag).join(' y ')}${rest ? ` · descanso ${restLabel(rest)} al terminar la ronda` : ''}</div>
+          <div class="exercise-summary"></div>
+        </div>
+      </div>
+      <div class="exercise-body">
+        ${members.map((m) => `
+          <div class="ss-member">
+            <div class="ss-member-top">
+              <div>
+                <div class="exercise-title"><span class="ss-tag">${m.tag}</span>${esc(m.ex.nombre)}</div>
+                <div class="exercise-meta">${m.ex.sets}×${esc(m.ex.repsLabel)}</div>
+              </div>
+              ${unitToggleHTML(m.unit)}
+            </div>
+            ${exerciseDetailsHTML(m)}
+            ${exerciseActionsHTML(m)}
+          </div>
+        `).join('')}
+        <div class="sets-container ss-sets"></div>
+      </div>
+    `;
+    card.querySelectorAll('.ss-member').forEach((el, i) => wireExerciseControls(el, members[i], logDate, exercises));
+  } else {
+    const m = members[0];
+    card.innerHTML = `
+      <div class="exercise-head">
+        <div>
+          <div class="exercise-title">${esc(m.ex.nombre)}</div>
+          <div class="exercise-meta">${m.ex.sets}×${esc(m.ex.repsLabel)}${rest ? ` · descanso ${restLabel(rest)}` : ''}</div>
+          <div class="exercise-summary"></div>
+        </div>
+        ${unitToggleHTML(m.unit)}
+      </div>
+      <div class="exercise-body">
+        ${exerciseDetailsHTML(m)}
+        <div class="sets-container"></div>
+        ${exerciseActionsHTML(m)}
+      </div>
+    `;
+    wireExerciseControls(card, m, logDate, exercises);
+  }
+
+  const setsContainer = card.querySelector('.sets-container');
+  const maxSets = Math.max(...block.members.map((ex) => ex.sets));
+  for (let s = 0; s < maxSets; s++) {
+    const inRound = members.filter((m) => s < m.ex.sets);
+    inRound.forEach((m, mi) => {
+      const { ex, last, lastUnit, unit, sessions } = m;
+      const sides = sidesFor(ex);
       sides.forEach((side, sideIdx) => {
+        const lastRowOfRound = mi === inRound.length - 1 && sideIdx === sides.length - 1;
         const state = getSetState(logDate, currentDay, ex.nombre, s, side.field);
         // valores de la sesión anterior: se muestran como guía y se usan al marcar ✓ sin escribir nada
         const prevSets = last && (last.entry[side.field] || last.entry.sets);
@@ -1271,9 +1451,14 @@ function renderExerciseList() {
         const prev = prevSet && { kg: convertWeight(prevSet.kg, lastUnit, unit), reps: prevSet.reps };
 
         const row = document.createElement('div');
-        row.className = 'set-row' + (ex.uni ? ' uni' : '') + (ex.uni && sideIdx === sides.length - 1 ? ' side-last' : '');
+        if (isSS) {
+          row.className = 'set-row ss' + (lastRowOfRound ? ' round-last' : '');
+        } else {
+          row.className = 'set-row' + (ex.uni ? ' uni' : '') + (ex.uni && sideIdx === sides.length - 1 ? ' side-last' : '');
+        }
+        const sideTag = ex.uni ? ' ' + side.tag : '';
         row.innerHTML = `
-          <div class="set-num">${s + 1}${ex.uni ? ' ' + side.tag : ''}</div>
+          <div class="set-num">${isSS ? `<span class="ss-tag">${m.tag}</span>` : ''}${s + 1}${sideTag}</div>
           <input type="number" inputmode="decimal" placeholder="${esc((prev && prev.kg) || unit)}" value="${esc(state.kg || '')}">
           <input type="number" inputmode="numeric" placeholder="${esc((prev && prev.reps) || 'reps')}" value="${esc(state.reps || '')}">
           <button class="check-btn${state.done ? ' done' : ''}" aria-label="Marcar serie">${state.done ? '✓' : ''}</button>
@@ -1298,33 +1483,29 @@ function renderExerciseList() {
           setSetState(logDate, currentDay, ex.nombre, s, patch, side.field);
           checkBtn.classList.toggle('done', willBeDone);
           checkBtn.textContent = willBeDone ? '✓' : '';
-          renderProgressBar();
-          if (!willBeDone) return;
-
-          // récord: supera todo lo anterior y lo ya marcado hoy
-          const weight = toKg(kgInput.value, unit);
-          const pastTop = sessions.reduce((max, ses) => Math.max(max, entryTopKg(ses.entry) || 0), 0);
-          if (weight !== '' && pastTop > 0 && weight > pastTop && weight > (todayTopBefore || 0)) {
-            showToast(`Nuevo récord: ${kgInput.value} ${unit}`);
+          if (willBeDone) {
+            // récord: supera todo lo anterior y lo ya marcado hoy
+            const weight = toKg(kgInput.value, unit);
+            const pastTop = sessions.reduce((max, ses) => Math.max(max, entryTopKg(ses.entry) || 0), 0);
+            if (weight !== '' && pastTop > 0 && weight > pastTop && weight > (todayTopBefore || 0)) {
+              showToast(`Nuevo récord: ${kgInput.value} ${unit}`);
+            }
+            const roundDone = inRound.every((other) => isSeriesDone(logDate, currentDay, other.ex, s));
+            if (rest > 0 && roundDone) startRestTimer(rest, isSS ? `Superserie ${block.letter}` : ex.nombre);
           }
-          if (ex.restSec > 0 && isSeriesDone(logDate, currentDay, ex, s)) {
-            startRestTimer(ex.restSec, ex.nombre);
-          }
-          if (isExerciseDone(logDate, currentDay, ex)) {
-            collapsedState[collapseKey] = true;
-            card.classList.add('collapsed');
-            updateSummary();
-            const next = card.nextElementSibling;
-            if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
+          afterCheck(willBeDone);
         });
 
         setsContainer.appendChild(row);
       });
-    }
+    });
+  }
 
-    exerciseListEl.appendChild(card);
-  });
+  return () => members.map((m) => {
+    const entry = getEntry(logDate, currentDay, m.ex.nombre, false);
+    const text = entry ? entryText(entry) : '';
+    return isSS ? `${m.tag}: ${text || '—'}` : text;
+  }).join('\n');
 }
 
 document.getElementById('week-banner-back').addEventListener('click', () => {
@@ -1555,7 +1736,7 @@ function exercisesWithHistory() {
   Object.values(progressData).forEach((days) => {
     Object.values(days || {}).forEach((dayEntry) => {
       Object.keys(dayEntry || {}).forEach((name) => {
-        if (entryHasDone(dayEntry[name])) seen.add(name);
+        if (entryHasNumbers(dayEntry[name])) seen.add(name);
       });
     });
   });
@@ -1792,14 +1973,21 @@ function routineFromBlockJSON(text) {
         if (names.has(nombre)) throw new Error(`"${nombre}" está repetido en "${d.dia}".`);
         if (!Number.isInteger(sets) || sets < 1 || sets > 20) throw new Error(`"${nombre}": "series" debe ser un número entre 1 y 20.`);
         names.add(nombre);
+        const warm = String(e.fase || '').toLowerCase() === 'calentamiento';
+        const repsLabel = String(e.reps ?? '');
         return {
-          nombre, sets,
-          repsLabel: String(e.reps ?? ''),
+          nombre,
+          // el calentamiento se marca una sola vez, sin kg/reps ni lados
+          sets: warm ? 1 : sets,
+          repsLabel: warm && sets > 1 ? `${sets}× ${repsLabel}` : repsLabel,
           restSec: Math.max(0, Number(e.descanso_seg) || 0),
-          uni: !!e.unilateral,
+          uni: !!e.unilateral && !warm,
           nota: e.cue ? String(e.cue) : '',
+          ss: !warm && e.superserie ? String(e.superserie).trim().toUpperCase() : '',
+          warm,
         };
       }),
+      duracion: Math.max(0, Math.round(Number(d.duracion_estimada_min) || 0)),
     };
   });
 
@@ -1838,7 +2026,9 @@ document.getElementById('routine-apply').addEventListener('click', () => {
     return;
   }
   try {
-    applyRoutine(routineFromBlockJSON(input.value));
+    const routine = routineFromBlockJSON(input.value);
+    routine.source = input.value;
+    applyRoutine(routine);
   } catch (err) {
     window.alert(`No se pudo aplicar la rutina.\n${err.message}`);
     return;
