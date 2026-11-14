@@ -486,6 +486,16 @@
   .warm-row .r { font-size: 12px; font-weight: 600; color: var(--gold); margin-top: 1px; }
   .warm-row .c { font-size: 12px; color: var(--text-dim); line-height: 1.4; margin-top: 3px; }
   .app-version { text-align: center; font-size: 12px; color: var(--text-dim); padding: 4px 0 12px; }
+  .set-num small { display: block; font-size: 10px; font-weight: 700; color: var(--text-dim); }
+  .set-row.side-pending input, .set-row.side-pending .check-btn { border-color: var(--gold); border-style: dashed; }
+  .set-row.side-pending .set-num small { color: var(--gold); }
+  .session-line { font-size: 11.5px; color: var(--text-dim); margin-top: 6px; min-height: 14px; }
+  .ls-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .ls-chip, .ls-grid span { font-size: 12px; font-weight: 600; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .ls-chip { background: var(--bg-elev-2); border-radius: 6px; padding: 3px 7px; }
+  .ls-chip i, .ls-grid i { font-style: normal; font-weight: 500; color: var(--text-dim); margin-right: 3px; }
+  .ls-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 3px 12px; margin-top: 6px; }
+  .ls-grid .ls-n { color: var(--text-dim); font-weight: 500; }
   .autosave-note { text-align: center; font-size: 12px; color: var(--text-dim); padding: 6px 0 10px; }
 
   /* ---------- Resumen (tiles) ---------- */
@@ -582,6 +592,7 @@
       <span id="progress-pct">0%</span>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="session-line" id="session-line"></div>
   </div>
 
   <div id="exercise-list"></div>
@@ -682,7 +693,7 @@
 
   <div class="card">
     <h2>Historial en CSV</h2>
-    <p>Todas las series completadas, con el peso siempre en kilos.</p>
+    <p>Todas las series registradas, con el peso siempre en kilos, la columna "completado" y la duración de cada sesión.</p>
     <div class="btn-row"><button class="btn" id="download-progress-btn">Descargar progreso</button></div>
   </div>
 
@@ -843,7 +854,7 @@ const DAY_LABELS = {
 
 
 // Se muestra al final de la pestaña Datos para saber qué versión tiene el teléfono.
-const APP_VERSION = '12 nov 2026 · superseries + Bloque 5 v2.2 incluido';
+const APP_VERSION = '14 nov 2026 · duración, lado y completado en CSV';
 
 /* ======================================================================
    ESTADO Y PERSISTENCIA (localStorage)
@@ -860,7 +871,8 @@ const LS_SUBS = 'gym_subs';       // { "YYYY-MM-DD": { dayKey: { "<ejercicio de 
 const LS_SYNC = 'gym_sync';       // { url, enabled, dirty, lastOk, lastError }
 const LB_TO_KG = 0.45359237;
 // Claves que forman el respaldo: cualquier cambio en ellas se manda a la hoja.
-const BACKED_UP_KEYS = [LS_PROGRESS, LS_ROUTINE, LS_SUBS, 'food_entries'];
+const LS_SESSIONS = 'gym_sessions'; // { "YYYY-MM-DD": { dayKey: { inicio: ms, fin: ms } } }
+const BACKED_UP_KEYS = [LS_PROGRESS, LS_ROUTINE, LS_SUBS, LS_SESSIONS, 'food_entries'];
 
 function loadJSON(key, fallback) {
   try {
@@ -891,6 +903,7 @@ let ROUTINE = isValidRoutine(storedRoutine) ? storedRoutine : DEFAULT_ROUTINE;
 
 let progressData = loadJSON(LS_PROGRESS, {}) || {};
 let subsData = loadJSON(LS_SUBS, {}) || {};
+let sessionsData = loadJSON(LS_SESSIONS, {}) || {};
 
 // Los registros de Bloque 4 se guardaron por posición ("0", "1", ...) en vez de
 // por nombre; se renombran una sola vez para que el CSV y "última vez" los lean.
@@ -1009,7 +1022,10 @@ function getEntry(dateISO, dayKey, exKey, create) {
   return dayEntry[exKey] || null;
 }
 
-const SIDES = [{ field: 'sets', tag: 'D' }, { field: 'setsI', tag: 'I' }];
+const SIDES = [
+  { field: 'sets', tag: 'D', label: 'Der', lado: 'derecho' },
+  { field: 'setsI', tag: 'I', label: 'Izq', lado: 'izquierdo' },
+];
 function sidesFor(ex) {
   return ex.uni && !ex.warm ? SIDES : [SIDES[0]];
 }
@@ -1018,8 +1034,11 @@ function getSetState(dateISO, dayKey, exKey, setIndex, field = 'sets') {
   const set = entry && entry[field] && entry[field][setIndex];
   return set || { kg: '', reps: '', done: false };
 }
-function setSetState(dateISO, dayKey, exKey, setIndex, patch, field = 'sets') {
+// `meta` se copia al ejercicio del día (p. ej. { uni: true }) para que el CSV no
+// dependa de la rutina vigente al exportar.
+function setSetState(dateISO, dayKey, exKey, setIndex, patch, field = 'sets', meta = null) {
   const entry = getEntry(dateISO, dayKey, exKey, true);
+  if (meta) Object.assign(entry, meta);
   if (!entry[field]) entry[field] = [];
   if (!entry[field][setIndex]) entry[field][setIndex] = { kg: '', reps: '', done: false };
   Object.assign(entry[field][setIndex], patch);
@@ -1085,7 +1104,7 @@ function entryHasDone(entry) {
 }
 // Al menos una serie hecha con kg o reps (el calentamiento solo se marca y no cuenta).
 function entryHasNumbers(entry) {
-  return !!entry && doneSets(entry.sets).concat(doneSets(entry.setsI)).some((s) => s.kg || s.reps);
+  return !!entry && !entry.warm && doneSets(entry.sets).concat(doneSets(entry.setsI)).some((s) => s.kg || s.reps);
 }
 function entryText(entry) {
   const unit = entry.unit || 'kg';
@@ -1318,7 +1337,8 @@ function buildWarmupCard(card, block, logDate, afterCheck) {
     const btn = row.querySelector('.check-btn');
     btn.addEventListener('click', () => {
       const willBeDone = !getSetState(logDate, currentDay, ex.nombre, 0).done;
-      setSetState(logDate, currentDay, ex.nombre, 0, { done: willBeDone });
+      setSetState(logDate, currentDay, ex.nombre, 0, { done: willBeDone, reps: willBeDone ? ex.repsLabel : '' }, 'sets', { warm: true });
+      if (willBeDone) markSessionProgress(logDate, currentDay);
       btn.classList.toggle('done', willBeDone);
       btn.textContent = willBeDone ? '✓' : '';
       afterCheck(willBeDone);
@@ -1331,16 +1351,33 @@ function buildWarmupCard(card, block, logDate, afterCheck) {
   };
 }
 
+function fmtPrevSet(set) {
+  if (!set || !set.done) return '—';
+  return set.kg ? `${set.kg} × ${set.reps || '?'}` : `${set.reps || '?'} reps`;
+}
+// Kg y reps de la última sesión del ejercicio, serie por serie (y por lado si es unilateral).
+function lastSessionHTML(ex, last, lastUnit) {
+  if (!last) return 'Sin registro previo';
+  const entry = last.entry;
+  const head = `Última vez ${ddmmFromISO(last.date)} · ${lastUnit}`;
+  if (ex.uni || entry.uni || entry.setsI) {
+    const right = entry.sets || [], left = entry.setsI || [];
+    const cells = [];
+    for (let i = 0; i < Math.max(right.length, left.length); i++) {
+      const d = fmtPrevSet(right[i]), iz = fmtPrevSet(left[i]);
+      if (d === '—' && iz === '—') continue;
+      cells.push(`<span class="ls-n">S${i + 1}</span><span><i>Der</i> ${esc(d)}</span><span><i>Izq</i> ${esc(iz)}</span>`);
+    }
+    return `${head}<div class="ls-grid">${cells.join('')}</div>`;
+  }
+  const chips = (entry.sets || []).map((set, i) => (set && set.done
+    ? `<span class="ls-chip"><i>S${i + 1}</i> ${esc(fmtPrevSet(set))}</span>` : '')).join('');
+  return `${head}<div class="ls-chips">${chips}</div>`;
+}
+
 function exerciseDetailsHTML(m) {
   const { ex, last, lastUnit, hint } = m;
-  let lastHtml = 'Sin registro previo';
-  if (last) {
-    const right = doneSetsText(last.entry.sets, lastUnit);
-    const left = doneSetsText(last.entry.setsI, lastUnit);
-    lastHtml = `Última vez ${ddmmFromISO(last.date)}:` + (left
-      ? `<br>D: <strong>${esc(right || '—')}</strong><br>I: <strong>${esc(left)}</strong>`
-      : ` <strong>${esc(right)}</strong>`);
-  }
+  const lastHtml = lastSessionHTML(ex, last, lastUnit);
   return `
     ${ex.original ? `<div class="exercise-sub">Hoy sustituye a: ${esc(ex.original)}</div>` : ''}
     ${ex.nota ? `<div class="exercise-note">${esc(ex.nota)}</div>` : ''}
@@ -1470,6 +1507,14 @@ function buildTrainingCard(card, block, logDate, exercises, afterCheck) {
   }
 
   const setsContainer = card.querySelector('.sets-container');
+  // En unilaterales, resalta el lado que falta cuando el otro ya está marcado.
+  const sideRows = [];
+  const updatePendingSides = () => sideRows.forEach(({ row, ex, s, field }) => {
+    const other = field === 'sets' ? 'setsI' : 'sets';
+    const pending = !getSetState(logDate, currentDay, ex.nombre, s, field).done
+      && getSetState(logDate, currentDay, ex.nombre, s, other).done;
+    row.classList.toggle('side-pending', pending);
+  });
   const maxSets = Math.max(...block.members.map((ex) => ex.sets));
   for (let s = 0; s < maxSets; s++) {
     const inRound = members.filter((m) => s < m.ex.sets);
@@ -1490,21 +1535,22 @@ function buildTrainingCard(card, block, logDate, exercises, afterCheck) {
         } else {
           row.className = 'set-row' + (ex.uni ? ' uni' : '') + (ex.uni && sideIdx === sides.length - 1 ? ' side-last' : '');
         }
-        const sideTag = ex.uni ? ' ' + side.tag : '';
         row.innerHTML = `
-          <div class="set-num">${isSS ? `<span class="ss-tag">${m.tag}</span>` : ''}${s + 1}${sideTag}</div>
+          <div class="set-num">${isSS ? `<span class="ss-tag">${m.tag}</span>` : ''}${s + 1}${ex.uni ? `<small>${side.label}</small>` : ''}</div>
           <input type="number" inputmode="decimal" placeholder="${esc((prev && prev.kg) || unit)}" value="${esc(state.kg || '')}">
           <input type="number" inputmode="numeric" placeholder="${esc((prev && prev.reps) || 'reps')}" value="${esc(state.reps || '')}">
           <button class="check-btn${state.done ? ' done' : ''}" aria-label="Marcar serie">${state.done ? '✓' : ''}</button>
         `;
         const [kgInput, repsInput] = row.querySelectorAll('input');
         const checkBtn = row.querySelector('.check-btn');
+        const meta = ex.uni ? { uni: true } : null;
+        if (ex.uni) sideRows.push({ row, ex, s, field: side.field });
 
         kgInput.addEventListener('input', () => {
-          setSetState(logDate, currentDay, ex.nombre, s, { kg: kgInput.value }, side.field);
+          setSetState(logDate, currentDay, ex.nombre, s, { kg: kgInput.value }, side.field, meta);
         });
         repsInput.addEventListener('input', () => {
-          setSetState(logDate, currentDay, ex.nombre, s, { reps: repsInput.value }, side.field);
+          setSetState(logDate, currentDay, ex.nombre, s, { reps: repsInput.value }, side.field, meta);
         });
         checkBtn.addEventListener('click', () => {
           const willBeDone = !getSetState(logDate, currentDay, ex.nombre, s, side.field).done;
@@ -1514,10 +1560,12 @@ function buildTrainingCard(card, block, logDate, exercises, afterCheck) {
             if (!repsInput.value && prev.reps) { repsInput.value = prev.reps; patch.reps = prev.reps; }
           }
           const todayTopBefore = entryTopKg(getEntry(logDate, currentDay, ex.nombre, false) || {});
-          setSetState(logDate, currentDay, ex.nombre, s, patch, side.field);
+          setSetState(logDate, currentDay, ex.nombre, s, patch, side.field, meta);
           checkBtn.classList.toggle('done', willBeDone);
           checkBtn.textContent = willBeDone ? '✓' : '';
+          updatePendingSides();
           if (willBeDone) {
+            markSessionProgress(logDate, currentDay);
             // récord: supera todo lo anterior y lo ya marcado hoy
             const weight = toKg(kgInput.value, unit);
             const pastTop = sessions.reduce((max, ses) => Math.max(max, entryTopKg(ses.entry) || 0), 0);
@@ -1535,6 +1583,8 @@ function buildTrainingCard(card, block, logDate, exercises, afterCheck) {
     });
   }
 
+  updatePendingSides();
+
   return () => members.map((m) => {
     const entry = getEntry(logDate, currentDay, m.ex.nombre, false);
     const text = entry ? entryText(entry) : '';
@@ -1547,11 +1597,61 @@ document.getElementById('week-banner-back').addEventListener('click', () => {
   renderDayView();
 });
 
+/* ---- duración de la sesión ----
+   Inicio: al abrir el día de hoy. Mientras no se haya marcado nada, una
+   apertura más de 30 min después lo vuelve a fijar (p. ej. si se abrió la app
+   en la mañana solo para ver la rutina). Fin: la hora de la última serie
+   marcada, así que no hace falta tocar nada al terminar. */
+const SESSION_RESTART_MS = 30 * 60 * 1000;
+function getSession(dateISO, dayKey) {
+  return (sessionsData[dateISO] || {})[dayKey] || null;
+}
+function touchSessionStart(dayKey) {
+  const dateISO = logDateForDay(dayKey);
+  if (dateISO !== todayISO()) return;
+  const ses = getSession(dateISO, dayKey);
+  if (ses && (ses.fin || Date.now() - ses.inicio < SESSION_RESTART_MS)) return;
+  if (!sessionsData[dateISO]) sessionsData[dateISO] = {};
+  sessionsData[dateISO][dayKey] = { inicio: Date.now() };
+  // sin markDirty: el inicio se respalda junto con la primera serie marcada
+  localStorage.setItem(LS_SESSIONS, JSON.stringify(sessionsData));
+}
+function markSessionProgress(dateISO, dayKey) {
+  if (dateISO !== todayISO()) return;
+  if (!sessionsData[dateISO]) sessionsData[dateISO] = {};
+  const ses = sessionsData[dateISO][dayKey] || (sessionsData[dateISO][dayKey] = { inicio: Date.now() });
+  ses.fin = Date.now();
+  saveJSON(LS_SESSIONS, sessionsData);
+  renderSessionLine();
+}
+function hhmm(ms) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+function sessionMinutes(ses) {
+  return ses && ses.inicio && ses.fin ? Math.max(0, Math.round((ses.fin - ses.inicio) / 60000)) : '';
+}
+function renderSessionLine() {
+  const el = document.getElementById('session-line');
+  const ses = getSession(logDateForDay(currentDay), currentDay);
+  el.textContent = ses && ses.inicio
+    ? `Inicio ${hhmm(ses.inicio)}${ses.fin ? ` · última serie ${hhmm(ses.fin)} · ${sessionMinutes(ses)} min` : ''}`
+    : '';
+}
+
 function renderDayView() {
+  touchSessionStart(currentDay);
   renderDayChips();
   renderExerciseList();
   renderProgressBar();
+  renderSessionLine();
 }
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !document.getElementById('view-day').classList.contains('active')) return;
+  touchSessionStart(currentDay);
+  renderSessionLine();
+});
 
 function showToast(msg) {
   const el = document.getElementById('toast') || createToastEl();
@@ -1941,20 +2041,51 @@ function downloadFile(filename, text, mime) {
   URL.revokeObjectURL(url);
 }
 
+// Datos de la rutina por nombre de ejercicio (la vigente manda sobre la incluida),
+// para exportar bien registros viejos que no guardaron si eran unilaterales o calentamiento.
+function routineInfoByName() {
+  const info = {};
+  [DEFAULT_ROUTINE, ROUTINE].forEach((r) => r.order.forEach((dk) => r.dias[dk].ejercicios.forEach((ex) => {
+    info[ex.nombre] = { uni: !!ex.uni && !ex.warm, warm: !!ex.warm, repsLabel: ex.repsLabel };
+  })));
+  return info;
+}
+function setHasData(set) {
+  return !!set && (set.done || set.kg || set.reps);
+}
+
 function buildProgressRows() {
-  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps', 'lado', 'nota']];
+  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps', 'lado', 'nota', 'completado', 'hora_inicio', 'hora_fin', 'duracion_min']];
+  const info = routineInfoByName();
   Object.keys(progressData).sort().forEach((dateISO) => {
     Object.keys(progressData[dateISO] || {}).forEach((dayKey) => {
       const dayEntry = progressData[dateISO][dayKey] || {};
       const dayLabel = DAY_LABELS[dayKey] || dayKey;
+      const ses = getSession(dateISO, dayKey);
+      const sessionCols = [hhmm(ses && ses.inicio), hhmm(ses && ses.fin), sessionMinutes(ses)];
       Object.keys(dayEntry).forEach((exName) => {
         const entry = dayEntry[exName] || {};
-        const push = (sets, lado) => (sets || []).forEach((set, i) => {
-          if (!set || !set.done) return;
-          rows.push([dateISO, dayLabel, exName, i + 1, toKg(set.kg, entry.unit), set.reps || '', lado, entry.nota || '']);
-        });
-        push(entry.sets, entry.setsI ? 'derecho' : '');
-        push(entry.setsI, 'izquierdo');
+        const exInfo = info[exName] || {};
+        const warm = !!entry.warm || !!exInfo.warm;
+        const uni = !warm && (!!entry.uni || !!entry.setsI || !!exInfo.uni);
+        const push = (set, index, lado) => {
+          const done = !!(set && set.done);
+          let reps = (set && set.reps) || '';
+          if (warm && done && !reps) reps = exInfo.repsLabel || '';
+          rows.push([dateISO, dayLabel, exName, index + 1, set ? toKg(set.kg, entry.unit) : '', reps, lado,
+            entry.nota || '', done ? 'si' : 'no', ...sessionCols]);
+        };
+        if (uni) {
+          // siempre una fila por serie y por lado, aunque falte uno de los dos
+          const right = entry.sets || [], left = entry.setsI || [];
+          for (let i = 0; i < Math.max(right.length, left.length); i++) {
+            if (!setHasData(right[i]) && !setHasData(left[i])) continue;
+            push(right[i], i, 'derecho');
+            push(left[i], i, 'izquierdo');
+          }
+        } else {
+          (entry.sets || []).forEach((set, i) => { if (setHasData(set)) push(set, i, ''); });
+        }
       });
     });
   });
@@ -1967,7 +2098,7 @@ function buildProgressCSV() {
 document.getElementById('download-progress-btn').addEventListener('click', () => {
   const csv = buildProgressCSV();
   if (csv.split('\r\n').length <= 1) {
-    showToast('Aún no hay series completadas');
+    showToast('Aún no hay series registradas');
     return;
   }
   downloadFile(`gym-progreso-${todayISO()}.csv`, '﻿' + csv, 'text/csv;charset=utf-8;');
@@ -2089,6 +2220,7 @@ function buildBackup() {
     savedAt: new Date().toISOString(),
     progress: progressData,
     subs: subsData,
+    sessions: sessionsData,
     routine: loadJSON(LS_ROUTINE, null),
     food: loadJSON('food_entries', []),
     unit: defaultUnit,
@@ -2104,6 +2236,7 @@ function applyBackup(b) {
   }
   localStorage.setItem(LS_PROGRESS, JSON.stringify(b.progress));
   localStorage.setItem(LS_SUBS, JSON.stringify(b.subs || {}));
+  localStorage.setItem(LS_SESSIONS, JSON.stringify(b.sessions || {}));
   localStorage.setItem('food_entries', JSON.stringify(Array.isArray(b.food) ? b.food : []));
   if (isValidRoutine(b.routine)) localStorage.setItem(LS_ROUTINE, JSON.stringify(b.routine));
   else localStorage.removeItem(LS_ROUTINE);
