@@ -496,6 +496,33 @@
   .ls-chip i, .ls-grid i { font-style: normal; font-weight: 500; color: var(--text-dim); margin-right: 3px; }
   .ls-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 3px 12px; margin-top: 6px; }
   .ls-grid .ls-n { color: var(--text-dim); font-weight: 500; }
+  .set-row.timed { grid-template-columns: 34px 1fr 1fr 92px; }
+  .sw-btn {
+    height: 44px; border-radius: 10px; border: 1px solid var(--gold); background: var(--bg-elev-2);
+    color: var(--gold); font-size: 13px; font-weight: 700;
+  }
+  .sw-btn.done { background: var(--ok); border-color: var(--ok); color: #fff; font-size: 18px; }
+  .sw-overlay {
+    position: fixed; inset: 0; z-index: 200; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    padding: 24px; background: var(--bg); text-align: center;
+  }
+  .sw-overlay.show { display: flex; }
+  .sw-ex { font-size: 16px; font-weight: 700; color: var(--text); max-width: 340px; }
+  .sw-side { font-size: 14px; font-weight: 700; color: var(--gold); min-height: 18px; }
+  .sw-phase { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-dim); min-height: 16px; }
+  .sw-time { font-size: 88px; line-height: 1; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .sw-time.count { font-size: 120px; color: var(--text); }
+  .sw-bar { position: relative; width: min(320px, 80vw); height: 10px; border-radius: 5px; background: var(--border); }
+  .sw-fill { height: 100%; border-radius: 5px; background: var(--gold); transform-origin: left; transform: scaleX(0); }
+  .sw-min { position: absolute; top: -5px; width: 2px; height: 20px; background: var(--text); }
+  .sw-target { font-size: 13px; color: var(--text-dim); }
+  .sw-actions { display: flex; gap: 12px; margin-top: 10px; }
+  .sw-actions button {
+    min-width: 120px; padding: 16px 24px; border-radius: 28px; border: 1px solid var(--border);
+    background: var(--bg-elev); color: var(--text); font-size: 16px; font-weight: 700;
+  }
+  .sw-actions button.primary { background: var(--gold); border-color: var(--gold); color: #13151A; }
   .autosave-note { text-align: center; font-size: 12px; color: var(--text-dim); padding: 6px 0 10px; }
 
   /* ---------- Resumen (tiles) ---------- */
@@ -709,6 +736,20 @@
   <div class="app-version" id="app-version"></div>
 </section>
 
+<!-- ================= CRONÓMETRO DE EJERCICIOS POR TIEMPO ================= -->
+<div class="sw-overlay" id="sw-overlay" role="dialog" aria-label="Cronómetro" aria-live="polite">
+  <div class="sw-ex" id="sw-ex"></div>
+  <div class="sw-side" id="sw-side"></div>
+  <div class="sw-phase" id="sw-phase"></div>
+  <div class="sw-time" id="sw-time">00:00</div>
+  <div class="sw-bar" id="sw-bar"><div class="sw-fill" id="sw-fill"></div><div class="sw-min" id="sw-min"></div></div>
+  <div class="sw-target" id="sw-target"></div>
+  <div class="sw-actions">
+    <button id="sw-pause">Pausa</button>
+    <button class="primary" id="sw-stop">Detener</button>
+  </div>
+</div>
+
 <!-- ================= BARRA DE DESCANSO ================= -->
 <div class="timer-bar" id="timer-bar" role="status">
   <div class="timer-bar-track"><div class="timer-bar-fill" id="timer-fill"></div></div>
@@ -854,7 +895,7 @@ const DAY_LABELS = {
 
 
 // Se muestra al final de la pestaña Datos para saber qué versión tiene el teléfono.
-const APP_VERSION = '14 nov 2026 · duración, lado y completado en CSV';
+const APP_VERSION = '14 nov 2026 · ejercicios por tiempo con cronómetro';
 
 /* ======================================================================
    ESTADO Y PERSISTENCIA (localStorage)
@@ -1096,7 +1137,10 @@ function doneSets(sets) {
 }
 function doneSetsText(sets, unit) {
   return doneSets(sets)
-    .map((s) => (s.kg ? `${s.kg}${unit}×${s.reps || '?'}` : `${s.reps || '?'}`))
+    .map((s) => {
+      if (s.secs) return `${s.kg ? `${s.kg}${unit} × ` : ''}${fmtSecs(s.secs)}`;
+      return s.kg ? `${s.kg}${unit}×${s.reps || '?'}` : `${s.reps || '?'}`;
+    })
     .join(' · ');
 }
 function entryHasDone(entry) {
@@ -1104,7 +1148,7 @@ function entryHasDone(entry) {
 }
 // Al menos una serie hecha con kg o reps (el calentamiento solo se marca y no cuenta).
 function entryHasNumbers(entry) {
-  return !!entry && !entry.warm && doneSets(entry.sets).concat(doneSets(entry.setsI)).some((s) => s.kg || s.reps);
+  return !!entry && !entry.warm && doneSets(entry.sets).concat(doneSets(entry.setsI)).some((s) => s.kg || s.reps || s.secs);
 }
 function entryText(entry) {
   const unit = entry.unit || 'kg';
@@ -1118,6 +1162,11 @@ function entryTopKg(entry) {
   const weights = doneSets(entry.sets).concat(doneSets(entry.setsI))
     .map((s) => toKg(s.kg, unit)).filter((w) => w !== '');
   return weights.length ? Math.max(...weights) : null;
+}
+function entryTopSecs(entry) {
+  const secs = doneSets(entry.sets).concat(doneSets(entry.setsI))
+    .map((s) => parseFloat(s.secs)).filter((v) => !isNaN(v));
+  return secs.length ? Math.max(...secs) : null;
 }
 function entryTopReps(entry) {
   const reps = doneSets(entry.sets).concat(doneSets(entry.setsI))
@@ -1164,6 +1213,7 @@ function isCleanSession(entry, ex, top) {
   });
 }
 function progressionHint(ex, sessions, unit) {
+  if (isTimed(ex)) return null;
   const top = repTarget(ex);
   if (!top || !sessions.length) return null;
   const [last, prev] = sessions;
@@ -1353,13 +1403,15 @@ function buildWarmupCard(card, block, logDate, afterCheck) {
 
 function fmtPrevSet(set) {
   if (!set || !set.done) return '—';
+  if (set.secs) return `${set.kg ? `${set.kg} × ` : ''}${fmtSecs(set.secs)}`;
   return set.kg ? `${set.kg} × ${set.reps || '?'}` : `${set.reps || '?'} reps`;
 }
 // Kg y reps de la última sesión del ejercicio, serie por serie (y por lado si es unilateral).
 function lastSessionHTML(ex, last, lastUnit) {
   if (!last) return 'Sin registro previo';
   const entry = last.entry;
-  const head = `Última vez ${ddmmFromISO(last.date)} · ${lastUnit}`;
+  const hasKg = doneSets(entry.sets).concat(doneSets(entry.setsI)).some((set) => set.kg);
+  const head = `Última vez ${ddmmFromISO(last.date)}${hasKg ? ` · ${lastUnit}` : ''}`;
   if (ex.uni || entry.uni || entry.setsI) {
     const right = entry.sets || [], left = entry.setsI || [];
     const cells = [];
@@ -1515,19 +1567,34 @@ function buildTrainingCard(card, block, logDate, exercises, afterCheck) {
       && getSetState(logDate, currentDay, ex.nombre, s, other).done;
     row.classList.toggle('side-pending', pending);
   });
+  const timedRows = {}; // "<ejercicio>|<serie>|<lado>" -> refresca la fila desde lo guardado
   const maxSets = Math.max(...block.members.map((ex) => ex.sets));
   for (let s = 0; s < maxSets; s++) {
     const inRound = members.filter((m) => s < m.ex.sets);
     inRound.forEach((m, mi) => {
       const { ex, last, lastUnit, unit, sessions } = m;
       const sides = sidesFor(ex);
+      const timed = isTimed(ex);
+      const meta = ex.uni ? { uni: true } : null;
+      // Serie por tiempo terminada (cronómetro o a mano): se marca hecha y, si
+      // la ronda quedó completa, arranca el descanso del ejercicio.
+      const completeTimed = (field, secs) => {
+        setSetState(logDate, currentDay, ex.nombre, s, { secs: String(secs), reps: '', done: true }, field, meta);
+        const refresh = timedRows[`${ex.nombre}|${s}|${field}`];
+        if (refresh) refresh();
+        updatePendingSides();
+        markSessionProgress(logDate, currentDay);
+        const roundDone = inRound.every((other) => isSeriesDone(logDate, currentDay, other.ex, s));
+        if (rest > 0 && roundDone) startRestTimer(rest, isSS ? `Superserie ${block.letter}` : ex.nombre);
+        afterCheck(true);
+      };
       sides.forEach((side, sideIdx) => {
         const lastRowOfRound = mi === inRound.length - 1 && sideIdx === sides.length - 1;
         const state = getSetState(logDate, currentDay, ex.nombre, s, side.field);
         // valores de la sesión anterior: se muestran como guía y se usan al marcar ✓ sin escribir nada
         const prevSets = last && (last.entry[side.field] || last.entry.sets);
         const prevSet = (prevSets && prevSets[s] && prevSets[s].done) ? prevSets[s] : null;
-        const prev = prevSet && { kg: convertWeight(prevSet.kg, lastUnit, unit), reps: prevSet.reps };
+        const prev = prevSet && { kg: convertWeight(prevSet.kg, lastUnit, unit), reps: prevSet.reps, secs: prevSet.secs };
 
         const row = document.createElement('div');
         if (isSS) {
@@ -1535,16 +1602,66 @@ function buildTrainingCard(card, block, logDate, exercises, afterCheck) {
         } else {
           row.className = 'set-row' + (ex.uni ? ' uni' : '') + (ex.uni && sideIdx === sides.length - 1 ? ' side-last' : '');
         }
+        const setNumHTML = `<div class="set-num">${isSS ? `<span class="ss-tag">${m.tag}</span>` : ''}${s + 1}${ex.uni ? `<small>${side.label}</small>` : ''}</div>`;
+        if (ex.uni) sideRows.push({ row, ex, s, field: side.field });
+
+        if (timed) {
+          row.classList.add('timed');
+          row.innerHTML = `
+            ${setNumHTML}
+            <input type="number" inputmode="decimal" placeholder="${esc((prev && prev.kg) || unit)}" value="${esc(state.kg || '')}" aria-label="Peso">
+            <input type="number" inputmode="numeric" placeholder="${esc((prev && prev.secs) || 'seg')}" value="${esc(state.secs || '')}" aria-label="Segundos">
+            <button class="sw-btn"></button>
+          `;
+          const [kgInput, secsInput] = row.querySelectorAll('input');
+          const btn = row.querySelector('.sw-btn');
+          const refresh = () => {
+            const st = getSetState(logDate, currentDay, ex.nombre, s, side.field);
+            secsInput.value = st.secs || '';
+            btn.classList.toggle('done', !!st.done);
+            btn.textContent = st.done ? '✓' : (secsInput.value ? 'Marcar' : 'Comenzar');
+            btn.setAttribute('aria-label', st.done ? 'Serie hecha: toca para desmarcar' : btn.textContent);
+          };
+          timedRows[`${ex.nombre}|${s}|${side.field}`] = refresh;
+          refresh();
+
+          kgInput.addEventListener('input', () => {
+            setSetState(logDate, currentDay, ex.nombre, s, { kg: kgInput.value }, side.field, meta);
+          });
+          secsInput.addEventListener('input', () => {
+            setSetState(logDate, currentDay, ex.nombre, s, { secs: secsInput.value }, side.field, meta);
+            if (!getSetState(logDate, currentDay, ex.nombre, s, side.field).done) {
+              btn.textContent = secsInput.value ? 'Marcar' : 'Comenzar';
+            }
+          });
+          btn.addEventListener('click', () => {
+            if (getSetState(logDate, currentDay, ex.nombre, s, side.field).done) {
+              setSetState(logDate, currentDay, ex.nombre, s, { done: false }, side.field, meta);
+              refresh();
+              updatePendingSides();
+              afterCheck(false);
+              return;
+            }
+            if (secsInput.value) { completeTimed(side.field, secsInput.value); return; }
+            const queue = [{ field: side.field, label: ex.uni ? `Lado ${side.lado}` : '' }];
+            const other = SIDES.find((sd) => sd.field !== side.field);
+            if (ex.uni && !getSetState(logDate, currentDay, ex.nombre, s, other.field).done) {
+              queue.push({ field: other.field, label: `Lado ${other.lado}` });
+            }
+            startTimedSet({ ex, queue, onSide: completeTimed });
+          });
+          setsContainer.appendChild(row);
+          return;
+        }
+
         row.innerHTML = `
-          <div class="set-num">${isSS ? `<span class="ss-tag">${m.tag}</span>` : ''}${s + 1}${ex.uni ? `<small>${side.label}</small>` : ''}</div>
+          ${setNumHTML}
           <input type="number" inputmode="decimal" placeholder="${esc((prev && prev.kg) || unit)}" value="${esc(state.kg || '')}">
           <input type="number" inputmode="numeric" placeholder="${esc((prev && prev.reps) || 'reps')}" value="${esc(state.reps || '')}">
           <button class="check-btn${state.done ? ' done' : ''}" aria-label="Marcar serie">${state.done ? '✓' : ''}</button>
         `;
         const [kgInput, repsInput] = row.querySelectorAll('input');
         const checkBtn = row.querySelector('.check-btn');
-        const meta = ex.uni ? { uni: true } : null;
-        if (ex.uni) sideRows.push({ row, ex, s, field: side.field });
 
         kgInput.addEventListener('input', () => {
           setSetState(logDate, currentDay, ex.nombre, s, { kg: kgInput.value }, side.field, meta);
@@ -1756,6 +1873,223 @@ function playBeep() {
 }
 
 /* ======================================================================
+   CRONÓMETRO DE EJERCICIOS POR TIEMPO
+   Cuenta hacia arriba usando marcas de tiempo (Date.now), no ticks, así no
+   se desfasa si el teléfono se bloquea o la app pasa a segundo plano.
+   ====================================================================== */
+const TIME_RE = /(\d+(?:[.,]\d+)?)(?:\s*(?:-|–|a)\s*(\d+(?:[.,]\d+)?))?\s*(segundos?|seg|s|minutos?|min)\b/i;
+const SW_PAUSE_MIN_SEC = 5 * 60;
+
+// "20-30 s/lado" -> { minSec: 20, maxSec: 30 }; "15 min zona 2" -> { minSec: 900, maxSec: 900 }
+function timeRange(ex) {
+  const m = String(ex.repsLabel || '').match(TIME_RE);
+  if (!m) return null;
+  const factor = /^m/i.test(m[3]) ? 60 : 1;
+  const a = parseFloat(m[1].replace(',', '.')) * factor;
+  const b = m[2] ? parseFloat(m[2].replace(',', '.')) * factor : a;
+  return { minSec: Math.round(Math.min(a, b)), maxSec: Math.round(Math.max(a, b)) };
+}
+function isTimed(ex) {
+  return !ex.warm && (!!ex.timed || !!timeRange(ex));
+}
+// Sin rango (medicion "tiempo" sin unidad en reps) el cronómetro solo se detiene a mano.
+function timedSpec(ex) {
+  return timeRange(ex) || { minSec: null, maxSec: null };
+}
+function fmtClock(sec) {
+  const s = Math.max(0, Math.floor(sec));
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+function fmtSecs(sec) {
+  const s = Math.round(Number(sec) || 0);
+  return s < 60 ? `${s} s` : `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} min`;
+}
+
+function ensureAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { /* audio no disponible */ }
+}
+function tone(freq, dur, delay = 0) {
+  try {
+    ensureAudio();
+    const t = audioCtx.currentTime + delay;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  } catch (e) { /* audio no disponible */ }
+}
+function vibrate(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+let wakeLock = null;
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator) || wakeLock) return;
+  try {
+    const lock = await navigator.wakeLock.request('screen');
+    if (!sw) { lock.release().catch(() => {}); return; }
+    wakeLock = lock;
+    lock.addEventListener('release', () => { if (wakeLock === lock) wakeLock = null; });
+  } catch (e) { /* no disponible o denegado */ }
+}
+function releaseWakeLock() {
+  if (wakeLock) wakeLock.release().catch(() => {});
+  wakeLock = null;
+}
+
+const swEl = {
+  overlay: document.getElementById('sw-overlay'),
+  ex: document.getElementById('sw-ex'),
+  side: document.getElementById('sw-side'),
+  phase: document.getElementById('sw-phase'),
+  time: document.getElementById('sw-time'),
+  bar: document.getElementById('sw-bar'),
+  fill: document.getElementById('sw-fill'),
+  min: document.getElementById('sw-min'),
+  target: document.getElementById('sw-target'),
+  pause: document.getElementById('sw-pause'),
+  stop: document.getElementById('sw-stop'),
+};
+// sw: { ex, spec, queue: [{ field, label }], idx, phase: 'pre'|'run'|'switch',
+//       phaseEndsAt, startAt, pausedMs, pausedAt, minFired, lastCount, onSide }
+let sw = null;
+
+// Corre una serie por tiempo: cuenta regresiva de 3 s, cronómetro y, si hay
+// otro lado en la cola, "Cambia de lado" 5 s y el segundo lado.
+function startTimedSet({ ex, queue, onSide }) {
+  if (sw) return;
+  closeTimer();
+  ensureAudio();
+  sw = { ex, queue, onSide, spec: timedSpec(ex), idx: 0 };
+  swEl.ex.textContent = ex.nombre;
+  swEl.overlay.classList.add('show');
+  requestWakeLock();
+  beginCountdown('pre', 3);
+  sw.interval = setInterval(swTick, 200);
+  swLoop();
+}
+function beginCountdown(phase, secs) {
+  sw.phase = phase;
+  sw.phaseEndsAt = Date.now() + secs * 1000;
+  sw.lastCount = null;
+  renderSwStatic();
+  swTick();
+}
+function beginRun() {
+  Object.assign(sw, { phase: 'run', startAt: Date.now(), pausedMs: 0, pausedAt: null, minFired: false });
+  tone(1320, 0.3);
+  renderSwStatic();
+}
+function swElapsedSec() {
+  return ((sw.pausedAt || Date.now()) - sw.startAt - sw.pausedMs) / 1000;
+}
+function swLoop() {
+  if (!sw) return;
+  swTick();
+  if (sw) sw.raf = requestAnimationFrame(swLoop);
+}
+function swTick() {
+  if (!sw) return;
+  if (sw.phase !== 'run') {
+    const left = Math.ceil((sw.phaseEndsAt - Date.now()) / 1000);
+    if (left <= 0) { beginRun(); return; }
+    if (left !== sw.lastCount) {
+      sw.lastCount = left;
+      swEl.time.textContent = String(left);
+      if (left <= 3) tone(880, 0.12);
+    }
+    return;
+  }
+  const elapsed = swElapsedSec();
+  const { minSec, maxSec } = sw.spec;
+  swEl.time.textContent = fmtClock(maxSec ? Math.min(elapsed, maxSec) : elapsed);
+  if (maxSec) swEl.fill.style.transform = `scaleX(${Math.min(1, elapsed / maxSec).toFixed(4)})`;
+  if (!sw.minFired && minSec && minSec < maxSec && elapsed >= minSec) {
+    sw.minFired = true;
+    swEl.phase.textContent = 'Mínimo alcanzado';
+    tone(988, 0.2);
+    vibrate(150);
+  }
+  if (maxSec && elapsed >= maxSec) {
+    tone(1175, 0.9);
+    vibrate([500, 150, 500]);
+    finishSide(maxSec);
+  }
+}
+function finishSide(secs) {
+  const run = sw;
+  const step = run.queue[run.idx];
+  if (run.idx < run.queue.length - 1) {
+    run.onSide(step.field, secs);
+    run.idx++;
+    beginCountdown('switch', 5);
+  } else {
+    closeStopwatch();
+    run.onSide(step.field, secs);
+  }
+}
+function closeStopwatch() {
+  if (!sw) return;
+  clearInterval(sw.interval);
+  cancelAnimationFrame(sw.raf);
+  sw = null;
+  swEl.overlay.classList.remove('show');
+  releaseWakeLock();
+}
+function renderSwStatic() {
+  const step = sw.queue[sw.idx];
+  const { minSec, maxSec } = sw.spec;
+  const running = sw.phase === 'run';
+  swEl.side.textContent = step.label || '';
+  swEl.phase.textContent = sw.phase === 'pre' ? 'Prepárate' : sw.phase === 'switch' ? 'Cambia de lado' : '';
+  swEl.target.textContent = maxSec
+    ? `Objetivo ${minSec < maxSec ? `${fmtSecs(minSec)} – ${fmtSecs(maxSec)}` : fmtSecs(maxSec)}`
+    : 'Sin tiempo fijo: toca Detener al terminar';
+  swEl.time.classList.toggle('count', !running);
+  swEl.bar.style.visibility = running && maxSec ? 'visible' : 'hidden';
+  swEl.fill.style.transform = 'scaleX(0)';
+  swEl.min.style.display = minSec && minSec < maxSec ? 'block' : 'none';
+  if (maxSec) swEl.min.style.left = `${((minSec / maxSec) * 100).toFixed(2)}%`;
+  swEl.stop.textContent = running ? 'Detener' : 'Cancelar';
+  swEl.pause.style.display = running && maxSec > SW_PAUSE_MIN_SEC ? '' : 'none';
+  swEl.pause.textContent = sw.pausedAt ? 'Reanudar' : 'Pausa';
+}
+
+swEl.stop.addEventListener('click', () => {
+  if (!sw) return;
+  if (sw.phase !== 'run') { closeStopwatch(); return; }
+  const secs = Math.floor(swElapsedSec());
+  if (secs < 1) { closeStopwatch(); return; }
+  finishSide(secs);
+});
+swEl.pause.addEventListener('click', () => {
+  if (!sw || sw.phase !== 'run') return;
+  if (sw.pausedAt) {
+    sw.pausedMs += Date.now() - sw.pausedAt;
+    sw.pausedAt = null;
+  } else {
+    sw.pausedAt = Date.now();
+  }
+  swEl.pause.textContent = sw.pausedAt ? 'Reanudar' : 'Pausa';
+  swEl.phase.textContent = sw.pausedAt ? 'En pausa' : '';
+});
+// Al volver a la app: recalcula con las marcas de tiempo y recupera el wake lock.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !sw) return;
+  requestWakeLock();
+  swTick();
+});
+
+/* ======================================================================
    RENDER: VISTA SEMANA
    ====================================================================== */
 const weekListEl = document.getElementById('week-list');
@@ -1913,10 +2247,12 @@ function renderProgressView() {
 
   const sessions = sessionsOf(progressExercise);
   const withWeight = sessions.some((s) => entryTopKg(s.entry) !== null);
+  const withSecs = !withWeight && sessions.some((s) => entryTopSecs(s.entry) !== null);
+  const valueOf = (entry) => (withWeight ? entryTopKg(entry) : withSecs ? entryTopSecs(entry) : entryTopReps(entry));
   const points = sessions
-    .map((s) => ({ date: s.date, entry: s.entry, value: withWeight ? entryTopKg(s.entry) : entryTopReps(s.entry) }))
+    .map((s) => ({ date: s.date, entry: s.entry, value: valueOf(s.entry) }))
     .filter((p) => p.value !== null);
-  const measure = withWeight ? 'kg' : 'reps';
+  const measure = withWeight ? 'kg' : withSecs ? 's' : 'reps';
 
   const best = points.reduce((max, p) => Math.max(max, p.value), 0);
   const bestPoint = points.find((p) => p.value === best);
@@ -1929,12 +2265,13 @@ function renderProgressView() {
     secondTile = `<div class="stat-tile"><div class="v">${repsAtBest.length ? Math.max(...repsAtBest) : '—'}</div><div class="l">reps con ese peso</div></div>`;
   }
   root.querySelector('#progress-tiles').innerHTML = `
-    <div class="stat-tile"><div class="v">${points.length ? fmtNum(best) : '—'}</div><div class="l">${withWeight ? 'mejor peso (kg)' : 'mejores reps'}</div></div>
+    <div class="stat-tile"><div class="v">${points.length ? (withSecs ? fmtSecs(best) : fmtNum(best)) : '—'}</div><div class="l">${withWeight ? 'mejor peso (kg)' : withSecs ? 'mejor tiempo' : 'mejores reps'}</div></div>
     ${secondTile}
     <div class="stat-tile"><div class="v">${sessions.length}</div><div class="l">${sessions.length === 1 ? 'sesión' : 'sesiones'}</div></div>
   `;
 
-  root.querySelector('#chart-title').textContent = withWeight ? 'Peso más alto por sesión (kg)' : 'Reps más altas por sesión';
+  root.querySelector('#chart-title').textContent = withWeight ? 'Peso más alto por sesión (kg)'
+    : withSecs ? 'Tiempo más largo por sesión (s)' : 'Reps más altas por sesión';
   drawLineChart(root.querySelector('#chart-wrap'), root.querySelector('#chart-sub'), points, measure);
 
   const list = root.querySelector('#session-list');
@@ -2046,16 +2383,16 @@ function downloadFile(filename, text, mime) {
 function routineInfoByName() {
   const info = {};
   [DEFAULT_ROUTINE, ROUTINE].forEach((r) => r.order.forEach((dk) => r.dias[dk].ejercicios.forEach((ex) => {
-    info[ex.nombre] = { uni: !!ex.uni && !ex.warm, warm: !!ex.warm, repsLabel: ex.repsLabel };
+    info[ex.nombre] = { uni: !!ex.uni && !ex.warm, warm: !!ex.warm, timed: isTimed(ex), repsLabel: ex.repsLabel };
   })));
   return info;
 }
 function setHasData(set) {
-  return !!set && (set.done || set.kg || set.reps);
+  return !!set && (set.done || set.kg || set.reps || set.secs);
 }
 
 function buildProgressRows() {
-  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps', 'lado', 'nota', 'completado', 'hora_inicio', 'hora_fin', 'duracion_min']];
+  const rows = [['fecha', 'dia', 'ejercicio', 'serie', 'kg', 'reps', 'lado', 'nota', 'completado', 'hora_inicio', 'hora_fin', 'duracion_min', 'segundos']];
   const info = routineInfoByName();
   Object.keys(progressData).sort().forEach((dateISO) => {
     Object.keys(progressData[dateISO] || {}).forEach((dayKey) => {
@@ -2068,12 +2405,14 @@ function buildProgressRows() {
         const exInfo = info[exName] || {};
         const warm = !!entry.warm || !!exInfo.warm;
         const uni = !warm && (!!entry.uni || !!entry.setsI || !!exInfo.uni);
+        const timed = !warm && (!!exInfo.timed || [...(entry.sets || []), ...(entry.setsI || [])].some((st) => st && st.secs));
         const push = (set, index, lado) => {
           const done = !!(set && set.done);
           let reps = (set && set.reps) || '';
           if (warm && done && !reps) reps = exInfo.repsLabel || '';
+          if (timed) reps = '';
           rows.push([dateISO, dayLabel, exName, index + 1, set ? toKg(set.kg, entry.unit) : '', reps, lado,
-            entry.nota || '', done ? 'si' : 'no', ...sessionCols]);
+            entry.nota || '', done ? 'si' : 'no', ...sessionCols, (set && set.secs) || '']);
         };
         if (uni) {
           // siempre una fila por serie y por lado, aunque falte uno de los dos
@@ -2150,6 +2489,7 @@ function routineFromBlockJSON(text) {
           nota: e.cue ? String(e.cue) : '',
           ss: !warm && e.superserie ? String(e.superserie).trim().toUpperCase() : '',
           warm,
+          timed: !warm && String(e.medicion || '').trim().toLowerCase() === 'tiempo',
         };
       }),
       duracion: Math.max(0, Math.round(Number(d.duracion_estimada_min) || 0)),
